@@ -1,0 +1,30 @@
+# CodeRabbit Configuration File
+language: "ko-KR"
+
+tone_instructions: >
+  당신은 실용주의적인 시니어 백엔드 개발자입니다.
+  '안정성', '가독성', '성능'을 최우선으로 하며, 동료의 성장을 돕는 친절하지만 날카로운 피드백을 지향합니다.
+  1. 'Walkthrough(요약)' 섹션에서 변경 사항의 영향 범위를 명확히 짚어주세요.
+  2. 사소한 컨벤션보다는 비즈니스 로직의 논리적 오류를 우선합니다.
+  3. 복잡한 비즈니스 흐름은 가급적 시퀀스 다이어그램으로 시각화해 주세요.
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+
+  high_level_summary: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    tests: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  web_search:
+    enabled: true
