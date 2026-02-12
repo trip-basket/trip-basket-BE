@@ -4,6 +4,17 @@ spring:
   profiles:
     active: dev
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH_CLIENT_ID}
+            client-secret: ${OAUTH_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
