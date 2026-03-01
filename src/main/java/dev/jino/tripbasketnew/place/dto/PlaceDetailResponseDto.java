@@ -3,7 +3,6 @@ package dev.jino.tripbasketnew.place.dto;
 import java.util.List;
 
 public record PlaceDetailResponseDto(
-    String id,
     String googlePlaceId,
     String name,
     String address,

@@ -3,10 +3,8 @@ package dev.jino.tripbasketnew.place.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.jino.tripbasketnew.place.client.PlaceClient;
 import dev.jino.tripbasketnew.place.dto.PlaceDetailResponseDto;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,7 +28,6 @@ public class PlaceService {
         String photoName = firstPhotoName(detail.path("photos"));
 
         return new PlaceDetailResponseDto(
-            stableId(googlePlaceId != null ? googlePlaceId : placeId),
             googlePlaceId,
             textOrNull(detail.path("displayName"), "text"),
             textOrNull(detail, "formattedAddress"),
@@ -133,7 +130,4 @@ public class PlaceService {
         return null;
     }
 
-    private String stableId(String seed) {
-        return UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8)).toString();
-    }
 }
