@@ -18,6 +18,9 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    url: /api-docs
+    config-url: /api-docs/swagger-config
+    disable-swagger-default-url: true
     operations-sorter: alpha
     tags-sorter: alpha
     try-it-out-enabled: true
