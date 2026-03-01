@@ -12,13 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 @Component
 @RequiredArgsConstructor
-public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
+public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCookieProperties authCookieProperties;
@@ -26,6 +26,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
     @PostConstruct
     void init() {
         setDefaultTargetUrl(authCookieProperties.redirectUri());
+        setAlwaysUseDefaultTargetUrl(true);
     }
 
     @Override
