@@ -36,4 +36,4 @@ app:
     same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
     path: /
     domain: ${AUTH_COOKIE_DOMAIN:}
-    redirect-uri: ${AUTH_REDIRECT_URI:/}
+    redirect-uri: ${AUTH_REDIRECT_URI:http://localhost:3000/}
