@@ -16,3 +16,6 @@ spring:
 app:
   auth-cookie:
     secure: ${AUTH_COOKIE_SECURE:true}
+
+server:
+  forward-headers-strategy: framework
