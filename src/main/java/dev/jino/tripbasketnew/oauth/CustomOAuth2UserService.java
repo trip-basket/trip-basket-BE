@@ -1,7 +1,5 @@
 package dev.jino.tripbasketnew.oauth;
 
-import dev.jino.tripbasketnew.member.entity.Member;
-import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -11,13 +9,12 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final MemberRepository memberRepository;
+    private final MemberOAuthService memberOAuthService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -39,7 +36,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             oAuth2User.getAttributes()
         );
 
-        Member member = saveOrUpdate(attributes);
+        memberOAuthService.saveOrUpdate(attributes);
 
         return new DefaultOAuth2User(
             Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
@@ -47,16 +44,4 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             attributes.getNameAttributeKey()
         );
     }
-
-    @Transactional
-    protected Member saveOrUpdate(OAuthAttributes attrs) {
-        return memberRepository.findByEmail(attrs.getEmail())
-            .orElseGet(() -> memberRepository.save(
-                Member.builder()
-                    .email(attrs.getEmail())
-                    .nickname(attrs.getName())
-                    .build()
-            ));
-    }
-
 }
