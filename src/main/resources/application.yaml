@@ -26,6 +26,15 @@ springdoc:
     path: /api-docs
     enabled: true
 
+google:
+  maps:
+    api-key: ${GOOGLE_MAPS_API_KEY:}
+    places:
+      base-url: https://places.googleapis.com/v1/places
+      field-mask: "id,displayName,formattedAddress,location,regularOpeningHours,priceLevel,photos,primaryType,types"
+      language-code: ko
+      photo-max-height-px: 800
+
 app:
   jwt:
     secret: ${JWT_SECRET}
