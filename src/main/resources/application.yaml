@@ -41,7 +41,7 @@ google:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
+    expiration-seconds: ${JWT_EXPIRATION_SECONDS:2592000}
   auth-cookie:
     name: ${AUTH_COOKIE_NAME:access_token}
     secure: ${AUTH_COOKIE_SECURE:false}
