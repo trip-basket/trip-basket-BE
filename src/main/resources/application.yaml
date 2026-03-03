@@ -45,7 +45,7 @@ app:
   auth-cookie:
     name: ${AUTH_COOKIE_NAME:access_token}
     secure: ${AUTH_COOKIE_SECURE:false}
-    same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
+    same-site: ${AUTH_COOKIE_SAME_SITE:None}
     path: /
     domain: ${AUTH_COOKIE_DOMAIN:}
     redirect-uri: ${AUTH_REDIRECT_URI:http://localhost:3000/}
