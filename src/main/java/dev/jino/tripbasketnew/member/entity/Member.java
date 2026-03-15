@@ -1,5 +1,8 @@
 package dev.jino.tripbasketnew.member.entity;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import dev.jino.tripbasketnew.common.entity.SoftDeletableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,8 +11,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Getter
@@ -25,5 +26,4 @@ public class Member extends SoftDeletableEntity {
 
     @Column(name = "nickname", nullable = false)
     private String nickname;
-    
 }

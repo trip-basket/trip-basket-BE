@@ -1,11 +1,5 @@
 package dev.jino.tripbasketnew.security.oauth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.jino.tripbasketnew.security.config.AuthCookieProperties;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -14,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
@@ -24,10 +18,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import dev.jino.tripbasketnew.security.config.AuthCookieProperties;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+
 @Component
 @RequiredArgsConstructor
 public class OAuth2AuthorizationRequestCookieRepository
-    implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+        implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private static final String AUTH_REQUEST_COOKIE_NAME = "oauth2_auth_request";
     private static final Duration AUTH_REQUEST_COOKIE_TTL = Duration.ofMinutes(3);
@@ -59,10 +62,7 @@ public class OAuth2AuthorizationRequestCookieRepository
 
     @Override
     public void saveAuthorizationRequest(
-        OAuth2AuthorizationRequest authorizationRequest,
-        HttpServletRequest request,
-        HttpServletResponse response
-    ) {
+            OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
         Assert.notNull(request, "request cannot be null");
         Assert.notNull(response, "response cannot be null");
 
@@ -77,9 +77,7 @@ public class OAuth2AuthorizationRequestCookieRepository
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(
-        HttpServletRequest request,
-        HttpServletResponse response
-    ) {
+            HttpServletRequest request, HttpServletResponse response) {
         Assert.notNull(request, "request cannot be null");
         Assert.notNull(response, "response cannot be null");
 
@@ -95,18 +93,18 @@ public class OAuth2AuthorizationRequestCookieRepository
         }
 
         return Arrays.stream(cookies)
-            .filter(cookie -> name.equals(cookie.getName()))
-            .findFirst()
-            .orElse(null);
+                .filter(cookie -> name.equals(cookie.getName()))
+                .findFirst()
+                .orElse(null);
     }
 
     private void addCookie(HttpServletResponse response, String value, Duration maxAge) {
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(AUTH_REQUEST_COOKIE_NAME, value)
-            .httpOnly(true)
-            .secure(authCookieProperties.secure())
-            .path(authCookieProperties.path())
-            .sameSite(authCookieProperties.sameSite())
-            .maxAge(maxAge);
+                .httpOnly(true)
+                .secure(authCookieProperties.secure())
+                .path(authCookieProperties.path())
+                .sameSite(authCookieProperties.sameSite())
+                .maxAge(maxAge);
 
         if (StringUtils.hasText(authCookieProperties.domain())) {
             builder.domain(authCookieProperties.domain());
@@ -117,11 +115,11 @@ public class OAuth2AuthorizationRequestCookieRepository
 
     private void deleteCookie(HttpServletResponse response) {
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(AUTH_REQUEST_COOKIE_NAME, "")
-            .httpOnly(true)
-            .secure(authCookieProperties.secure())
-            .path(authCookieProperties.path())
-            .sameSite(authCookieProperties.sameSite())
-            .maxAge(Duration.ZERO);
+                .httpOnly(true)
+                .secure(authCookieProperties.secure())
+                .path(authCookieProperties.path())
+                .sameSite(authCookieProperties.sameSite())
+                .maxAge(Duration.ZERO);
 
         if (StringUtils.hasText(authCookieProperties.domain())) {
             builder.domain(authCookieProperties.domain());
@@ -144,7 +142,7 @@ public class OAuth2AuthorizationRequestCookieRepository
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(value);
             OAuth2AuthorizationRequestPayload payload =
-                objectMapper.readValue(decoded, OAuth2AuthorizationRequestPayload.class);
+                    objectMapper.readValue(decoded, OAuth2AuthorizationRequestPayload.class);
             return payload.toAuthorizationRequest();
         } catch (IOException e) {
             return null;
@@ -154,43 +152,41 @@ public class OAuth2AuthorizationRequestCookieRepository
     }
 
     private record OAuth2AuthorizationRequestPayload(
-        String authorizationUri,
-        String clientId,
-        String redirectUri,
-        Set<String> scopes,
-        String state,
-        String authorizationRequestUri,
-        Map<String, Object> additionalParameters,
-        Map<String, Object> attributes
-    ) {
+            String authorizationUri,
+            String clientId,
+            String redirectUri,
+            Set<String> scopes,
+            String state,
+            String authorizationRequestUri,
+            Map<String, Object> additionalParameters,
+            Map<String, Object> attributes) {
 
         static OAuth2AuthorizationRequestPayload from(OAuth2AuthorizationRequest request) {
             return new OAuth2AuthorizationRequestPayload(
-                request.getAuthorizationUri(),
-                request.getClientId(),
-                request.getRedirectUri(),
-                new LinkedHashSet<>(request.getScopes()),
-                request.getState(),
-                request.getAuthorizationRequestUri(),
-                new LinkedHashMap<>(request.getAdditionalParameters()),
-                new LinkedHashMap<>(request.getAttributes())
-            );
+                    request.getAuthorizationUri(),
+                    request.getClientId(),
+                    request.getRedirectUri(),
+                    new LinkedHashSet<>(request.getScopes()),
+                    request.getState(),
+                    request.getAuthorizationRequestUri(),
+                    new LinkedHashMap<>(request.getAdditionalParameters()),
+                    new LinkedHashMap<>(request.getAttributes()));
         }
 
         OAuth2AuthorizationRequest toAuthorizationRequest() {
             if (!StringUtils.hasText(authorizationUri)
-                || !StringUtils.hasText(clientId)
-                || !StringUtils.hasText(redirectUri)
-                || !StringUtils.hasText(state)) {
+                    || !StringUtils.hasText(clientId)
+                    || !StringUtils.hasText(redirectUri)
+                    || !StringUtils.hasText(state)) {
                 throw new IllegalStateException("Invalid OAuth2 authorization request payload");
             }
 
             OAuth2AuthorizationRequest.Builder builder = OAuth2AuthorizationRequest.authorizationCode()
-                .authorizationUri(authorizationUri)
-                .clientId(clientId)
-                .redirectUri(redirectUri)
-                .scopes(scopes == null ? Set.of() : scopes)
-                .state(state);
+                    .authorizationUri(authorizationUri)
+                    .clientId(clientId)
+                    .redirectUri(redirectUri)
+                    .scopes(scopes == null ? Set.of() : scopes)
+                    .state(state);
 
             if (StringUtils.hasText(authorizationRequestUri)) {
                 builder.authorizationRequestUri(authorizationRequestUri);

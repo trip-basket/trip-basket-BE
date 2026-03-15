@@ -11,5 +11,4 @@ public class TripBasketNewApplication {
     public static void main(String[] args) {
         SpringApplication.run(TripBasketNewApplication.class, args);
     }
-
 }

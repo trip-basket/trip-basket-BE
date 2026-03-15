@@ -1,26 +1,29 @@
 package dev.jino.tripbasketnew.security.jwt;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
+import org.springframework.stereotype.Component;
+
 import dev.jino.tripbasketnew.security.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import javax.crypto.SecretKey;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
-import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -42,15 +45,15 @@ public class JwtTokenProvider {
         Instant expiresAt = now.plusSeconds(jwtProperties.expirationSeconds());
 
         List<String> roles = authentication.getAuthorities().stream()
-            .map(grantedAuthority -> grantedAuthority.getAuthority())
-            .toList();
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .toList();
 
         io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
-            .subject(authentication.getName())
-            .claim("roles", roles)
-            .issuedAt(Date.from(now))
-            .expiration(Date.from(expiresAt))
-            .signWith(getSigningKey(), Jwts.SIG.HS256);
+                .subject(authentication.getName())
+                .claim("roles", roles)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiresAt))
+                .signWith(getSigningKey(), Jwts.SIG.HS256);
 
         if (authentication.getPrincipal() instanceof OAuth2AuthenticatedPrincipal principal) {
             Object email = principal.getAttribute("email");
@@ -98,10 +101,10 @@ public class JwtTokenProvider {
 
     private Claims parseClaims(String token) {
         return Jwts.parser()
-            .verifyWith(getSigningKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private Collection<GrantedAuthority> extractAuthorities(Object rolesClaim) {
@@ -110,10 +113,10 @@ public class JwtTokenProvider {
         }
 
         return roles.stream()
-            .filter(String.class::isInstance)
-            .map(String.class::cast)
-            .map(role -> (GrantedAuthority) new SimpleGrantedAuthority(role))
-            .toList();
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .map(role -> (GrantedAuthority) new SimpleGrantedAuthority(role))
+                .toList();
     }
 
     private SecretKey getSigningKey() {

@@ -1,15 +1,18 @@
 package dev.jino.tripbasketnew.place.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import dev.jino.tripbasketnew.place.client.PlaceClient;
-import dev.jino.tripbasketnew.place.dto.PlaceDetailResponseDto;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import dev.jino.tripbasketnew.place.client.PlaceClient;
+import dev.jino.tripbasketnew.place.dto.PlaceDetailResponseDto;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -28,18 +31,15 @@ public class PlaceService {
         String photoName = firstPhotoName(detail.path("photos"));
 
         return new PlaceDetailResponseDto(
-            googlePlaceId,
-            textOrNull(detail.path("displayName"), "text"),
-            textOrNull(detail, "formattedAddress"),
-            new PlaceDetailResponseDto.Position(
-                doubleOrNull(location, "latitude"),
-                doubleOrNull(location, "longitude")
-            ),
-            parseOpeningHours(detail.path("regularOpeningHours").path("periods")),
-            parsePriceLevel(detail.path("priceLevel")),
-            placeClient.buildPhotoMediaUrl(photoName),
-            parseCategory(detail)
-        );
+                googlePlaceId,
+                textOrNull(detail.path("displayName"), "text"),
+                textOrNull(detail, "formattedAddress"),
+                new PlaceDetailResponseDto.Position(
+                        doubleOrNull(location, "latitude"), doubleOrNull(location, "longitude")),
+                parseOpeningHours(detail.path("regularOpeningHours").path("periods")),
+                parsePriceLevel(detail.path("priceLevel")),
+                placeClient.buildPhotoMediaUrl(photoName),
+                parseCategory(detail));
     }
 
     private String textOrNull(JsonNode node, String fieldName) {
@@ -129,5 +129,4 @@ public class PlaceService {
         }
         return null;
     }
-
 }
