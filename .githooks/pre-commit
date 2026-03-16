@@ -1,0 +1,16 @@
+#!/bin/sh
+
+STAGED_JAVA_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.java$')
+
+if [ -z "$STAGED_JAVA_FILES" ]; then
+  exit 0
+fi
+
+echo "Running spotlessApply..."
+./gradlew spotlessApply || exit 1
+
+echo "Re-staging staged Java files..."
+echo "$STAGED_JAVA_FILES" | xargs git add
+
+echo "Running spotlessCheck..."
+./gradlew spotlessCheck || exit 1
