@@ -31,6 +31,17 @@ public class GlobalExceptionHandler {
         return URI.create(req.getRequestURI());
     }
 
+    private void logSystemClientError(HttpStatus status, Exception e, HttpServletRequest req) {
+        String message = Optional.ofNullable(e.getMessage()).orElse("-");
+        log.warn(
+                "[SYS-{} {}] ex={} | msg={} | path={}",
+                status.value(),
+                status.getReasonPhrase(),
+                e.getClass().getSimpleName(),
+                message,
+                req.getRequestURI());
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusinessException(BusinessException e, HttpServletRequest req) {
 
@@ -39,9 +50,22 @@ public class GlobalExceptionHandler {
         HttpStatus httpStatus = errorCode.getHttpStatus();
 
         if (httpStatus.is5xxServerError()) {
-            log.error("[{} {}] {} | {}", httpStatus.value(), errorCode, errorMessage, e.getDebugInfo(), e);
+            log.error(
+                    "[BIZ-{} {}] msg={} | debugInfo={} | path={}",
+                    httpStatus.value(),
+                    errorCode,
+                    errorMessage,
+                    e.getDebugInfo(),
+                    req.getRequestURI(),
+                    e);
         } else {
-            log.warn("[{} {}] {} | {}", httpStatus.value(), errorCode, errorMessage, e.getDebugInfo());
+            log.warn(
+                    "[BIZ-{} {}] msg={} | debugInfo={} | path={}",
+                    httpStatus.value(),
+                    errorCode,
+                    errorMessage,
+                    e.getDebugInfo(),
+                    req.getRequestURI());
         }
 
         return ErrorResponses.of(e, instance(req));
@@ -56,7 +80,7 @@ public class GlobalExceptionHandler {
                         "message", Optional.ofNullable(fe.getDefaultMessage()).orElse("유효하지 않은 값입니다.")))
                 .toList();
 
-        log.warn("[400 BAD_REQUEST] Validation failed: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(
                 HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다.", URI.create(req.getRequestURI()), Map.of("errors", errors));
@@ -70,7 +94,7 @@ public class GlobalExceptionHandler {
                         "message", v.getMessage()))
                 .toList();
 
-        log.warn("[400 BAD_REQUEST] Constraint violation: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(
                 HttpStatus.BAD_REQUEST,
@@ -82,7 +106,7 @@ public class GlobalExceptionHandler {
     // 400: 잘못된 요청
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException e, HttpServletRequest req) {
-        log.warn("[400 BAD_REQUEST] Illegal argument: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다.", URI.create(req.getRequestURI()));
     }
@@ -90,7 +114,7 @@ public class GlobalExceptionHandler {
     // 400: 타입 불일치
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException e, HttpServletRequest req) {
-        log.warn("[400 BAD_REQUEST] Type mismatch: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, "파라미터 타입이 올바르지 않습니다: " + e.getName(), instance(req));
     }
@@ -98,7 +122,7 @@ public class GlobalExceptionHandler {
     // 400: JSON 파싱 불가
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException e, HttpServletRequest req) {
-        log.warn("[400 BAD_REQUEST] Not readable: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, "요청 본문을 해석할 수 없습니다.", instance(req));
     }
@@ -108,7 +132,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMissingParameter(MissingServletRequestParameterException e, HttpServletRequest req) {
         String message = String.format("필수 파라미터 '%s'가 누락되었습니다.", e.getParameterName());
 
-        log.warn("[400 BAD_REQUEST] Missing parameter: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, message, instance(req));
     }
@@ -118,7 +142,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMissingRequestCookie(MissingRequestCookieException e, HttpServletRequest req) {
         String message = String.format("필수 쿠키 '%s'가 누락되었습니다.", e.getCookieName());
 
-        log.warn("[400 BAD_REQUEST] Missing cookie: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, message, instance(req));
     }
@@ -128,16 +152,15 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleMissingRequestHeader(MissingRequestHeaderException e, HttpServletRequest req) {
         String message = String.format("필수 헤더 '%s'가 누락되었습니다.", e.getHeaderName());
 
-        log.warn("[400 BAD_REQUEST] Missing header: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, message, instance(req));
     }
 
     // 401: 컨트롤러/서비스 단에서 발생하는 JWT 관련 예외 처리
-    // (주로 토큰 재발급 시 Refresh Token을 파싱하려 할 때 발생)
     @ExceptionHandler(JwtException.class)
     public ProblemDetail handleJwtExceptionInController(JwtException e, HttpServletRequest req) {
-        log.warn("[401 UNAUTHORIZED] JWT exception: {}", e.toString(), e);
+        logSystemClientError(HttpStatus.UNAUTHORIZED, e, req);
 
         return ErrorResponses.of(HttpStatus.UNAUTHORIZED, "유효하지 않은 형식의 토큰입니다.", instance(req));
     }
@@ -148,7 +171,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = (e instanceof HttpRequestMethodNotSupportedException)
                 ? HttpStatus.METHOD_NOT_ALLOWED
                 : HttpStatus.UNSUPPORTED_MEDIA_TYPE;
-        log.warn("[{} {}] {}", status.value(), status.getReasonPhrase(), e.toString(), e);
+        logSystemClientError(status, e, req);
 
         String detail =
                 (status == HttpStatus.METHOD_NOT_ALLOWED) ? "지원하지 않는 HTTP 메서드입니다." : "지원하지 않는 Content-Type 입니다.";
@@ -158,7 +181,12 @@ public class GlobalExceptionHandler {
     // 500: 그외 모든 예외
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleFallback(Exception e, HttpServletRequest req) {
-        log.error("[500 UNEXPECTED] {}", e.toString(), e);
+        log.error(
+                "[SYS-500 INTERNAL_SERVER_ERROR] ex={} | msg={} | path={}",
+                e.getClass().getSimpleName(),
+                Optional.ofNullable(e.getMessage()).orElse("-"),
+                req.getRequestURI(),
+                e);
 
         return ErrorResponses.of(HttpStatus.INTERNAL_SERVER_ERROR, "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", instance(req));
     }
