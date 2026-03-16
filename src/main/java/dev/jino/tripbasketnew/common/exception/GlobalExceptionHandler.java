@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleIllegalArgument(IllegalArgumentException e, HttpServletRequest req) {
         log.warn("[400 BAD_REQUEST] Illegal argument: {}", e.toString(), e);
 
-        return ErrorResponses.of(HttpStatus.BAD_REQUEST, e.getMessage(), URI.create(req.getRequestURI()));
+        return ErrorResponses.of(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다.", URI.create(req.getRequestURI()));
     }
 
     // 400: 타입 불일치
@@ -150,7 +150,9 @@ public class GlobalExceptionHandler {
                 : HttpStatus.UNSUPPORTED_MEDIA_TYPE;
         log.warn("[{} {}] {}", status.value(), status.getReasonPhrase(), e.toString(), e);
 
-        return ErrorResponses.of(status, e.getMessage(), instance(req));
+        String detail =
+                (status == HttpStatus.METHOD_NOT_ALLOWED) ? "지원하지 않는 HTTP 메서드입니다." : "지원하지 않는 Content-Type 입니다.";
+        return ErrorResponses.of(status, detail, instance(req));
     }
 
     // 500: 그외 모든 예외
