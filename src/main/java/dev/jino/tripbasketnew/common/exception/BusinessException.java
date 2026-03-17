@@ -1,5 +1,7 @@
 package dev.jino.tripbasketnew.common.exception;
 
+import java.util.Objects;
+
 import lombok.Getter;
 
 @Getter
@@ -22,7 +24,7 @@ public class BusinessException extends RuntimeException {
 
     // 모든 생성자는 이 생성자로 위임된다.
     public BusinessException(ErrorCode errorCode, String debugInfo, Throwable cause) {
-        super(errorCode.getErrorMessage(), cause);
+        super(Objects.requireNonNull(errorCode, "errorCode must not be null").getErrorMessage(), cause);
         this.errorCode = errorCode;
         this.debugInfo = debugInfo;
     }
