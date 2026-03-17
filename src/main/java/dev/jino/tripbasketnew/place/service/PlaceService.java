@@ -3,13 +3,13 @@ package dev.jino.tripbasketnew.place.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import dev.jino.tripbasketnew.common.exception.BusinessException;
+import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import dev.jino.tripbasketnew.place.client.PlaceClient;
 import dev.jino.tripbasketnew.place.dto.PlaceDetailResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class PlaceService {
 
     public PlaceDetailResponseDto getPlaceDetail(String placeId) {
         if (!StringUtils.hasText(placeId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "placeId must not be blank");
+            throw new BusinessException(ErrorCode.PLACE_ID_BLANK);
         }
 
         JsonNode detail = placeClient.fetchPlaceDetail(placeId);
