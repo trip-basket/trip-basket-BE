@@ -1,6 +1,7 @@
 package dev.jino.tripbasketnew.common.exception;
 
 import java.net.URI;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -66,7 +67,7 @@ public class ErrorResponses {
     public static ProblemDetail of(BusinessException e, URI instance, Map<String, ?> props) {
         ErrorCode errorCode = e.getErrorCode();
         ProblemDetail pd = of(errorCode.getHttpStatus(), errorCode.getClientMessage(), instance, props);
-        pd.setType(URI.create("urn:problem:" + errorCode.name().toLowerCase()));
+        pd.setType(URI.create("urn:problem:" + errorCode.name().toLowerCase(Locale.ROOT)));
         return pd;
     }
 }
