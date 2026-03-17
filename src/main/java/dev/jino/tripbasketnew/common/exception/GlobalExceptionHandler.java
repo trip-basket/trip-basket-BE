@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
         logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(
-                HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다.", URI.create(req.getRequestURI()), Map.of("errors", errors));
+                HttpStatus.BAD_REQUEST, "입력값이 올바르지 않습니다.", instance(req), Map.of("errors", errors));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
         return ErrorResponses.of(
                 HttpStatus.BAD_REQUEST,
                 "요청 파라미터가 유효하지 않습니다.",
-                URI.create(req.getRequestURI()),
+                instance(req),
                 Map.of("violations", violations));
     }
 
