@@ -26,6 +26,6 @@ public class BusinessException extends RuntimeException {
     public BusinessException(ErrorCode errorCode, String debugInfo, Throwable cause) {
         super(Objects.requireNonNull(errorCode, "errorCode must not be null").getErrorMessage(), cause);
         this.errorCode = errorCode;
-        this.debugInfo = debugInfo;
+        this.debugInfo = debugInfo == null ? "" : debugInfo;
     }
 }
