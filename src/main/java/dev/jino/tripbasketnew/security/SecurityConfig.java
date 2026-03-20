@@ -26,10 +26,12 @@ import dev.jino.tripbasketnew.security.jwt.JwtAuthenticationFilter;
 import dev.jino.tripbasketnew.security.oauth.OAuth2AuthorizationRequestCookieRepository;
 import dev.jino.tripbasketnew.security.oauth.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableConfigurationProperties({JwtProperties.class, AuthCookieProperties.class})
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
@@ -63,10 +65,12 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             Object jwtAuthError = request.getAttribute("JWT_AUTH_ERROR");
+                            String reason = (jwtAuthError != null) ? jwtAuthError.toString() : "MISSING_AUTHENTICATION";
                             String detail = (jwtAuthError != null) ? "유효하지 않은 형식의 토큰입니다." : "인증이 필요합니다.";
                             ProblemDetail pd = ErrorResponses.of(
                                     HttpStatus.UNAUTHORIZED, detail, URI.create(request.getRequestURI()));
 
+                            logUnauthorized(reason, request.getRequestURI());
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
@@ -76,6 +80,7 @@ public class SecurityConfig {
                             ProblemDetail pd = ErrorResponses.of(
                                     HttpStatus.FORBIDDEN, "접근 권한이 없습니다.", URI.create(request.getRequestURI()));
 
+                            logForbidden(request.getRequestURI());
                             response.setStatus(HttpStatus.FORBIDDEN.value());
                             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                             response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
@@ -92,5 +97,13 @@ public class SecurityConfig {
                         logout.logoutSuccessUrl("/").deleteCookies(authCookieProperties.name(), "JSESSIONID"));
 
         return http.build();
+    }
+
+    private void logUnauthorized(String reason, String path) {
+        log.warn("[SYS-401 UNAUTHORIZED] auth=JWT | reason={} | path={}", reason, path);
+    }
+
+    private void logForbidden(String path) {
+        log.warn("[SYS-403 FORBIDDEN] auth=JWT | path={}", path);
     }
 }
