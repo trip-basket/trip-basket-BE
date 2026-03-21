@@ -29,11 +29,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String token = extractTokenFromCookie(request);
 
-        if (StringUtils.hasText(token)
-                && jwtTokenProvider.validateToken(token)
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        if (StringUtils.hasText(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                if (jwtTokenProvider.validateToken(token)) {
+                    Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    request.setAttribute("JWT_AUTH_ERROR", "INVALID_TOKEN");
+                }
+            } catch (RuntimeException e) {
+                request.setAttribute("JWT_AUTH_ERROR", "INVALID_TOKEN");
+                SecurityContextHolder.clearContext();
+            }
         }
 
         filterChain.doFilter(request, response);
