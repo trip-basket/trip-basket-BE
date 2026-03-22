@@ -1,6 +1,7 @@
 package dev.jino.tripbasketnew.room.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -32,9 +33,20 @@ public class Room extends SoftDeletableEntity {
     @Column(name = "trip_end_date", nullable = false)
     private LocalDate tripEndDate;
 
+    @Column(name = "invite_code")
+    private String inviteCode;
+
+    @Column(name = "invite_code_issued_at")
+    private LocalDateTime inviteCodeIssuedAt;
+
     public void update(String name, LocalDate tripStartDate, LocalDate tripEndDate) {
         this.name = name;
         this.tripStartDate = tripStartDate;
         this.tripEndDate = tripEndDate;
+    }
+
+    public void issueInviteCode(String inviteCode, LocalDateTime issuedAt) {
+        this.inviteCode = inviteCode;
+        this.inviteCodeIssuedAt = issuedAt;
     }
 }
