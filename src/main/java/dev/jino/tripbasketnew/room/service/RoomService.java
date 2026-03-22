@@ -34,10 +34,10 @@ public class RoomService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public RoomResponseDto createRoom(CreateRoomRequestDto request, String memberId) {
+    public RoomResponseDto createRoom(CreateRoomRequestDto request, UUID memberId) {
         validateTripPeriod(request.tripStartDate(), request.tripEndDate());
         Member member = memberRepository
-                .findById(UUID.fromString(memberId))
+                .findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         Room room = Room.builder()
@@ -52,13 +52,13 @@ public class RoomService {
         return toResponse(savedRoom);
     }
 
-    public RoomResponseDto getRoom(UUID roomId, String memberId) {
+    public RoomResponseDto getRoom(UUID roomId, UUID memberId) {
         return toResponse(
                 roomAccessPolicy.validateParticipantAccess(roomId, memberId).getRoom());
     }
 
     @Transactional
-    public RoomResponseDto updateRoom(UUID roomId, UpdateRoomRequestDto request, String memberId) {
+    public RoomResponseDto updateRoom(UUID roomId, UpdateRoomRequestDto request, UUID memberId) {
         Room room = roomAccessPolicy.validateOwnerAccess(roomId, memberId).getRoom();
 
         String name = StringUtils.hasText(request.name()) ? request.name().trim() : room.getName();
@@ -72,14 +72,14 @@ public class RoomService {
     }
 
     @Transactional
-    public void deleteRoom(UUID roomId, String memberId) {
+    public void deleteRoom(UUID roomId, UUID memberId) {
         Room room = roomAccessPolicy.validateOwnerAccess(roomId, memberId).getRoom();
         // 추후 방 삭제 시 RoomMember, PlanItem, TravelSegment, Todo, Reaction 등 하위 자원도 함께 소프트 딜리트되어야 한다.
         roomRepository.delete(room);
     }
 
     @Transactional
-    public IssueInviteCodeResponseDto issueInviteCode(UUID roomId, String memberId) {
+    public IssueInviteCodeResponseDto issueInviteCode(UUID roomId, UUID memberId) {
         Room room = roomAccessPolicy.validateOwnerAccess(roomId, memberId).getRoom();
         String inviteCode = InviteCodeGenerator.generate();
         LocalDateTime issuedAt = LocalDateTime.now();

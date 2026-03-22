@@ -74,12 +74,11 @@ class RoomMemberServiceTest {
                 .tripEndDate(LocalDate.of(2026, 3, 29))
                 .build();
 
-        when(roomAccessPolicy.validateParticipantAccess(roomId, OWNER_ID.toString()))
-                .thenReturn(RoomMember.owner(room, owner));
+        when(roomAccessPolicy.validateParticipantAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
         when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId))
                 .thenReturn(List.of(RoomMember.owner(room, owner), RoomMember.member(room, member)));
 
-        List<RoomMemberResponseDto> response = roomMemberService.getRoomMembers(roomId, OWNER_ID.toString());
+        List<RoomMemberResponseDto> response = roomMemberService.getRoomMembers(roomId, OWNER_ID);
 
         assertThat(response).hasSize(2);
         assertThat(response.get(0).role()).isEqualTo(RoomRole.OWNER);
@@ -106,7 +105,7 @@ class RoomMemberServiceTest {
                 .thenReturn(false);
         when(roomMemberRepository.save(any(RoomMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        JoinRoomResponseDto response = roomMemberService.joinRoom("A1B2C3D4", MEMBER_ID.toString());
+        JoinRoomResponseDto response = roomMemberService.joinRoom("A1B2C3D4", MEMBER_ID);
 
         assertThat(response.roomName()).isEqualTo("런던 여행");
         assertThat(response.role()).isEqualTo(RoomRole.MEMBER);
@@ -131,7 +130,7 @@ class RoomMemberServiceTest {
         when(roomMemberRepository.existsByRoom_IdAndMember_Id(room.getId(), member.getId()))
                 .thenReturn(true);
 
-        assertThatThrownBy(() -> roomMemberService.joinRoom("A1B2C3D4", MEMBER_ID.toString()))
+        assertThatThrownBy(() -> roomMemberService.joinRoom("A1B2C3D4", MEMBER_ID))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ROOM_ALREADY_JOINED);
@@ -151,10 +150,9 @@ class RoomMemberServiceTest {
                 .nickname("owner")
                 .build();
 
-        when(roomAccessPolicy.validateParticipantAccess(roomId, OWNER_ID.toString()))
-                .thenReturn(RoomMember.owner(room, owner));
+        when(roomAccessPolicy.validateParticipantAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
 
-        assertThatThrownBy(() -> roomMemberService.leaveRoom(roomId, OWNER_ID.toString()))
+        assertThatThrownBy(() -> roomMemberService.leaveRoom(roomId, OWNER_ID))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ROOM_OWNER_CANNOT_LEAVE);
@@ -175,10 +173,9 @@ class RoomMemberServiceTest {
                 .build();
         RoomMember roomMember = RoomMember.member(room, member);
 
-        when(roomAccessPolicy.validateParticipantAccess(roomId, MEMBER_ID.toString()))
-                .thenReturn(roomMember);
+        when(roomAccessPolicy.validateParticipantAccess(roomId, MEMBER_ID)).thenReturn(roomMember);
 
-        roomMemberService.leaveRoom(roomId, MEMBER_ID.toString());
+        roomMemberService.leaveRoom(roomId, MEMBER_ID);
 
         verify(roomMemberRepository).delete(roomMember);
     }

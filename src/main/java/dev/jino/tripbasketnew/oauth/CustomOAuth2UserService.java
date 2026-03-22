@@ -1,17 +1,17 @@
 package dev.jino.tripbasketnew.oauth;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import dev.jino.tripbasketnew.member.entity.Member;
+import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -40,11 +40,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuthAttributes attributes =
                 OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-        dev.jino.tripbasketnew.member.entity.Member member = memberOAuthService.saveOrUpdate(attributes);
-        Map<String, Object> principalAttributes = new HashMap<>(attributes.getAttributes());
-        principalAttributes.put("memberId", member.getId().toString());
+        Member member = memberOAuthService.saveOrUpdate(attributes);
+        UUID memberId = member.getId();
 
-        return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")), principalAttributes, "memberId");
+        return new UserPrincipal(
+                memberId,
+                member.getEmail(),
+                member.getNickname(),
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
     }
 }

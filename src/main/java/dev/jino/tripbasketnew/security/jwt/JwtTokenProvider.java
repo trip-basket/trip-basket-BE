@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Component;
 
 import dev.jino.tripbasketnew.security.config.JwtProperties;
+import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -43,7 +44,8 @@ public class JwtTokenProvider {
     public String createToken(Authentication authentication) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(jwtProperties.expirationSeconds());
-        String memberId = resolveMemberId(authentication);
+        UserPrincipal userPrincipal = resolveUserPrincipal(authentication);
+        String memberId = userPrincipal.getMemberId().toString();
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(grantedAuthority -> grantedAuthority.getAuthority())
@@ -52,21 +54,12 @@ public class JwtTokenProvider {
         io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
                 .subject(memberId)
                 .claim("memberId", memberId)
+                .claim("email", userPrincipal.getEmail())
+                .claim("name", userPrincipal.getName())
                 .claim("roles", roles)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
                 .signWith(getSigningKey(), Jwts.SIG.HS256);
-
-        if (authentication.getPrincipal() instanceof OAuth2AuthenticatedPrincipal principal) {
-            Object email = principal.getAttribute("email");
-            Object name = principal.getAttribute("name");
-            if (email instanceof String emailValue && !emailValue.isBlank()) {
-                builder.claim("email", emailValue);
-            }
-            if (name instanceof String nameValue && !nameValue.isBlank()) {
-                builder.claim("name", nameValue);
-            }
-        }
 
         return builder.compact();
     }
@@ -87,24 +80,40 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
         Collection<GrantedAuthority> authorities = extractAuthorities(claims.get("roles"));
-        String principal = claims.get("memberId", String.class);
-
-        if (principal == null || principal.isBlank()) {
-            principal = claims.getSubject();
+        String memberId = claims.get("memberId", String.class);
+        if (memberId == null || memberId.isBlank()) {
+            memberId = claims.getSubject();
         }
+
+        UserPrincipal principal = new UserPrincipal(
+                java.util.UUID.fromString(memberId),
+                claims.get("email", String.class),
+                claims.get("name", String.class),
+                authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    private String resolveMemberId(Authentication authentication) {
+    private UserPrincipal resolveUserPrincipal(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
+            return userPrincipal;
+        }
+
         if (authentication.getPrincipal() instanceof OAuth2AuthenticatedPrincipal principal) {
             Object memberId = principal.getAttribute("memberId");
+            Object email = principal.getAttribute("email");
+            Object name = principal.getAttribute("name");
             if (memberId instanceof String memberIdValue && !memberIdValue.isBlank()) {
-                return memberIdValue;
+                return new UserPrincipal(
+                        java.util.UUID.fromString(memberIdValue),
+                        email instanceof String emailValue ? emailValue : null,
+                        name instanceof String nameValue ? nameValue : null,
+                        authentication.getAuthorities());
             }
         }
 
-        return authentication.getName();
+        return new UserPrincipal(
+                java.util.UUID.fromString(authentication.getName()), null, null, authentication.getAuthorities());
     }
 
     private byte[] decodeSecret(String secret) {

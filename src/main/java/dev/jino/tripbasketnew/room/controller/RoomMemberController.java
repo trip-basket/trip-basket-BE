@@ -6,7 +6,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +20,7 @@ import dev.jino.tripbasketnew.room.dto.JoinRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.JoinRoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomMemberResponseDto;
 import dev.jino.tripbasketnew.room.service.RoomMemberService;
+import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,8 +54,9 @@ public class RoomMemberController {
         @ApiResponse(responseCode = "409", description = "이미 참여 중인 방", content = @Content)
     })
     @PostMapping("/join")
-    public JoinRoomResponseDto joinRoom(@Valid @RequestBody JoinRoomRequestDto request, Authentication authentication) {
-        return roomMemberService.joinRoom(request.inviteCode(), authentication.getName());
+    public JoinRoomResponseDto joinRoom(
+            @Valid @RequestBody JoinRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return roomMemberService.joinRoom(request.inviteCode(), userPrincipal.getMemberId());
     }
 
     @Operation(summary = "참여자 목록 조회", description = "현재 방의 참여자 목록을 조회합니다.")
@@ -73,8 +75,8 @@ public class RoomMemberController {
     public List<RoomMemberResponseDto> getRoomMembers(
             @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
                     UUID roomId,
-            Authentication authentication) {
-        return roomMemberService.getRoomMembers(roomId, authentication.getName());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return roomMemberService.getRoomMembers(roomId, userPrincipal.getMemberId());
     }
 
     @Operation(summary = "방 나가기", description = "현재 로그인한 사용자의 방 참여를 종료합니다.")
@@ -89,8 +91,8 @@ public class RoomMemberController {
     public ResponseEntity<Void> leaveRoom(
             @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
                     UUID roomId,
-            Authentication authentication) {
-        roomMemberService.leaveRoom(roomId, authentication.getName());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        roomMemberService.leaveRoom(roomId, userPrincipal.getMemberId());
         return ResponseEntity.noContent().build();
     }
 }

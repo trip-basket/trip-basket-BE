@@ -30,7 +30,7 @@ public class RoomMemberService {
     private final MemberRepository memberRepository;
     private final RoomRepository roomRepository;
 
-    public List<RoomMemberResponseDto> getRoomMembers(UUID roomId, String memberId) {
+    public List<RoomMemberResponseDto> getRoomMembers(UUID roomId, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
 
         return roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId).stream()
@@ -43,9 +43,9 @@ public class RoomMemberService {
     }
 
     @Transactional
-    public JoinRoomResponseDto joinRoom(String inviteCode, String memberId) {
+    public JoinRoomResponseDto joinRoom(String inviteCode, UUID memberId) {
         Member member = memberRepository
-                .findById(UUID.fromString(memberId))
+                .findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         Room room = roomRepository
                 .findByInviteCode(inviteCode.trim())
@@ -67,7 +67,7 @@ public class RoomMemberService {
     }
 
     @Transactional
-    public void leaveRoom(UUID roomId, String memberId) {
+    public void leaveRoom(UUID roomId, UUID memberId) {
         RoomMember roomMember = roomAccessPolicy.validateParticipantAccess(roomId, memberId);
 
         if (roomMember.getRole() == RoomRole.OWNER) {

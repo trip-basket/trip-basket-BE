@@ -25,9 +25,9 @@ public class RoomAccessPolicy {
     private final MemberRepository memberRepository;
     private final RoomRepository roomRepository;
 
-    public RoomMember validateParticipantAccess(UUID roomId, String memberId) {
+    public RoomMember validateParticipantAccess(UUID roomId, UUID memberId) {
         Member member = memberRepository
-                .findById(UUID.fromString(memberId))
+                .findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         Room room = roomRepository.findById(roomId).orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
 
@@ -36,7 +36,7 @@ public class RoomAccessPolicy {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_ACCESS_DENIED));
     }
 
-    public RoomMember validateOwnerAccess(UUID roomId, String memberId) {
+    public RoomMember validateOwnerAccess(UUID roomId, UUID memberId) {
         RoomMember roomMember = validateParticipantAccess(roomId, memberId);
 
         if (roomMember.getRole() != RoomRole.OWNER) {

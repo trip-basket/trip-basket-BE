@@ -67,7 +67,7 @@ class RoomServiceTest {
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(roomMemberRepository.save(any(RoomMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        RoomResponseDto response = roomService.createRoom(request, OWNER_ID.toString());
+        RoomResponseDto response = roomService.createRoom(request, OWNER_ID);
 
         assertThat(response.name()).isEqualTo("런던 여행");
         assertThat(response.tripStartDate()).isEqualTo(LocalDate.of(2026, 3, 16));
@@ -80,7 +80,7 @@ class RoomServiceTest {
         CreateRoomRequestDto request =
                 new CreateRoomRequestDto("런던 여행", LocalDate.of(2026, 3, 29), LocalDate.of(2026, 3, 16));
 
-        assertThatThrownBy(() -> roomService.createRoom(request, OWNER_ID.toString()))
+        assertThatThrownBy(() -> roomService.createRoom(request, OWNER_ID))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ROOM_INVALID_TRIP_PERIOD);
@@ -99,10 +99,9 @@ class RoomServiceTest {
                 .email("member@test.com")
                 .nickname("member")
                 .build();
-        when(roomAccessPolicy.validateParticipantAccess(roomId, MEMBER_ID.toString()))
-                .thenReturn(RoomMember.member(room, member));
+        when(roomAccessPolicy.validateParticipantAccess(roomId, MEMBER_ID)).thenReturn(RoomMember.member(room, member));
 
-        RoomResponseDto response = roomService.getRoom(roomId, MEMBER_ID.toString());
+        RoomResponseDto response = roomService.getRoom(roomId, MEMBER_ID);
 
         assertThat(response.name()).isEqualTo("런던 여행");
     }
@@ -120,11 +119,10 @@ class RoomServiceTest {
                 .email("owner@test.com")
                 .nickname("owner")
                 .build();
-        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID.toString()))
-                .thenReturn(RoomMember.owner(room, owner));
+        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
 
         RoomResponseDto response =
-                roomService.updateRoom(roomId, new UpdateRoomRequestDto("런던 여행 수정", null, null), OWNER_ID.toString());
+                roomService.updateRoom(roomId, new UpdateRoomRequestDto("런던 여행 수정", null, null), OWNER_ID);
 
         assertThat(response.name()).isEqualTo("런던 여행 수정");
         assertThat(response.tripStartDate()).isEqualTo(LocalDate.of(2026, 3, 16));
@@ -144,10 +142,9 @@ class RoomServiceTest {
                 .email("owner@test.com")
                 .nickname("owner")
                 .build();
-        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID.toString()))
-                .thenReturn(RoomMember.owner(room, owner));
+        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
 
-        roomService.deleteRoom(roomId, OWNER_ID.toString());
+        roomService.deleteRoom(roomId, OWNER_ID);
 
         verify(roomRepository).delete(room);
     }
@@ -165,10 +162,9 @@ class RoomServiceTest {
                 .email("owner@test.com")
                 .nickname("owner")
                 .build();
-        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID.toString()))
-                .thenReturn(RoomMember.owner(room, owner));
+        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
 
-        IssueInviteCodeResponseDto response = roomService.issueInviteCode(roomId, OWNER_ID.toString());
+        IssueInviteCodeResponseDto response = roomService.issueInviteCode(roomId, OWNER_ID);
 
         assertThat(response.inviteCode()).hasSize(6);
         assertThat(response.issuedAt()).isNotNull();

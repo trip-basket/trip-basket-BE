@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,6 +21,7 @@ import dev.jino.tripbasketnew.room.dto.IssueInviteCodeResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.UpdateRoomRequestDto;
 import dev.jino.tripbasketnew.room.service.RoomService;
+import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,8 +54,9 @@ public class RoomController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public RoomResponseDto createRoom(@Valid @RequestBody CreateRoomRequestDto request, Authentication authentication) {
-        return roomService.createRoom(request, authentication.getName());
+    public RoomResponseDto createRoom(
+            @Valid @RequestBody CreateRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return roomService.createRoom(request, userPrincipal.getMemberId());
     }
 
     @Operation(summary = "방 조회", description = "방 ID로 여행 방 상세 정보를 조회합니다.")
@@ -73,8 +75,8 @@ public class RoomController {
     public RoomResponseDto getRoom(
             @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
                     UUID roomId,
-            Authentication authentication) {
-        return roomService.getRoom(roomId, authentication.getName());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return roomService.getRoom(roomId, userPrincipal.getMemberId());
     }
 
     @Operation(summary = "방 수정", description = "방 이름과 여행 기간을 부분 수정합니다.")
@@ -95,8 +97,8 @@ public class RoomController {
             @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
                     UUID roomId,
             @RequestBody UpdateRoomRequestDto request,
-            Authentication authentication) {
-        return roomService.updateRoom(roomId, request, authentication.getName());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return roomService.updateRoom(roomId, request, userPrincipal.getMemberId());
     }
 
     @Operation(summary = "방 삭제", description = "방을 소프트 딜리트합니다.")
@@ -109,8 +111,8 @@ public class RoomController {
     public ResponseEntity<Void> deleteRoom(
             @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
                     UUID roomId,
-            Authentication authentication) {
-        roomService.deleteRoom(roomId, authentication.getName());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        roomService.deleteRoom(roomId, userPrincipal.getMemberId());
         return ResponseEntity.noContent().build();
     }
 
@@ -131,7 +133,7 @@ public class RoomController {
     public IssueInviteCodeResponseDto issueInviteCode(
             @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
                     UUID roomId,
-            Authentication authentication) {
-        return roomService.issueInviteCode(roomId, authentication.getName());
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return roomService.issueInviteCode(roomId, userPrincipal.getMemberId());
     }
 }
