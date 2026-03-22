@@ -43,13 +43,15 @@ public class JwtTokenProvider {
     public String createToken(Authentication authentication) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusSeconds(jwtProperties.expirationSeconds());
+        String memberId = resolveMemberId(authentication);
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(grantedAuthority -> grantedAuthority.getAuthority())
                 .toList();
 
         io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
-                .subject(authentication.getName())
+                .subject(memberId)
+                .claim("memberId", memberId)
                 .claim("roles", roles)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
@@ -85,8 +87,24 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
         Collection<GrantedAuthority> authorities = extractAuthorities(claims.get("roles"));
+        String principal = claims.get("memberId", String.class);
 
-        return new UsernamePasswordAuthenticationToken(claims.getSubject(), token, authorities);
+        if (principal == null || principal.isBlank()) {
+            principal = claims.getSubject();
+        }
+
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    }
+
+    private String resolveMemberId(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof OAuth2AuthenticatedPrincipal principal) {
+            Object memberId = principal.getAttribute("memberId");
+            if (memberId instanceof String memberIdValue && !memberIdValue.isBlank()) {
+                return memberIdValue;
+            }
+        }
+
+        return authentication.getName();
     }
 
     private byte[] decodeSecret(String secret) {

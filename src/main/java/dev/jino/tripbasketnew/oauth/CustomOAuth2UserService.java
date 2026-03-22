@@ -1,6 +1,8 @@
 package dev.jino.tripbasketnew.oauth;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -38,11 +40,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuthAttributes attributes =
                 OAuthAttributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-        memberOAuthService.saveOrUpdate(attributes);
+        dev.jino.tripbasketnew.member.entity.Member member = memberOAuthService.saveOrUpdate(attributes);
+        Map<String, Object> principalAttributes = new HashMap<>(attributes.getAttributes());
+        principalAttributes.put("memberId", member.getId().toString());
 
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
-                attributes.getAttributes(),
-                attributes.getNameAttributeKey());
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")), principalAttributes, "memberId");
     }
 }
