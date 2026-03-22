@@ -73,8 +73,7 @@ public class RoomMemberController {
     })
     @GetMapping("/{roomId}/members")
     public List<RoomMemberResponseDto> getRoomMembers(
-            @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
-                    UUID roomId,
+            @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return roomMemberService.getRoomMembers(roomId, userPrincipal.getMemberId());
     }
@@ -89,8 +88,7 @@ public class RoomMemberController {
     @DeleteMapping("/{roomId}/members/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> leaveRoom(
-            @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
-                    UUID roomId,
+            @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         roomMemberService.leaveRoom(roomId, userPrincipal.getMemberId());
         return ResponseEntity.noContent().build();

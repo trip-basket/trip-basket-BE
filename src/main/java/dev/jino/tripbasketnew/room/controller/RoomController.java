@@ -73,8 +73,7 @@ public class RoomController {
     })
     @GetMapping("/{roomId}")
     public RoomResponseDto getRoom(
-            @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
-                    UUID roomId,
+            @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return roomService.getRoom(roomId, userPrincipal.getMemberId());
     }
@@ -94,8 +93,7 @@ public class RoomController {
     })
     @PatchMapping("/{roomId}")
     public RoomResponseDto updateRoom(
-            @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
-                    UUID roomId,
+            @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @RequestBody UpdateRoomRequestDto request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return roomService.updateRoom(roomId, request, userPrincipal.getMemberId());
@@ -109,8 +107,7 @@ public class RoomController {
     })
     @DeleteMapping("/{roomId}")
     public ResponseEntity<Void> deleteRoom(
-            @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
-                    UUID roomId,
+            @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         roomService.deleteRoom(roomId, userPrincipal.getMemberId());
         return ResponseEntity.noContent().build();
@@ -131,8 +128,7 @@ public class RoomController {
     })
     @PostMapping("/{roomId}/invite-code")
     public IssueInviteCodeResponseDto issueInviteCode(
-            @Parameter(description = "방 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") @PathVariable
-                    UUID roomId,
+            @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         return roomService.issueInviteCode(roomId, userPrincipal.getMemberId());
     }
