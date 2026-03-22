@@ -42,6 +42,8 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-seconds: ${JWT_EXPIRATION_SECONDS:2592000}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,https://test.luts.kr}
   auth-cookie:
     name: ${AUTH_COOKIE_NAME:access_token}
     secure: ${AUTH_COOKIE_SECURE:false}
