@@ -11,6 +11,11 @@ public enum ErrorCode {
     // Member 관련
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "Member not found", "해당 사용자를 찾을 수 없습니다."),
 
+    // Room 관련
+    ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "Room not found", "해당 방을 찾을 수 없습니다."),
+    ROOM_INVALID_TRIP_PERIOD(
+            HttpStatus.BAD_REQUEST, "tripEndDate must not be before tripStartDate", "여행 종료일은 시작일보다 빠를 수 없습니다."),
+
     // Place 관련
     PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다.");
 
