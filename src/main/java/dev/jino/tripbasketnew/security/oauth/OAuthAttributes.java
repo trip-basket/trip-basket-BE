@@ -1,4 +1,4 @@
-package dev.jino.tripbasketnew.oauth;
+package dev.jino.tripbasketnew.security.oauth;
 
 import java.util.Map;
 

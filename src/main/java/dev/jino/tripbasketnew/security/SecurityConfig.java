@@ -24,10 +24,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.jino.tripbasketnew.common.exception.ErrorResponses;
-import dev.jino.tripbasketnew.oauth.CustomOAuth2UserService;
 import dev.jino.tripbasketnew.security.config.AuthCookieProperties;
 import dev.jino.tripbasketnew.security.config.JwtProperties;
 import dev.jino.tripbasketnew.security.jwt.JwtAuthenticationFilter;
+import dev.jino.tripbasketnew.security.oauth.CustomOAuth2UserService;
 import dev.jino.tripbasketnew.security.oauth.OAuth2AuthorizationRequestCookieRepository;
 import dev.jino.tripbasketnew.security.oauth.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
