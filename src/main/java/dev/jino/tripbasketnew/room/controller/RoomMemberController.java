@@ -3,7 +3,6 @@ package dev.jino.tripbasketnew.room.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.jino.tripbasketnew.room.dto.JoinRoomRequestDto;
@@ -54,9 +52,10 @@ public class RoomMemberController {
         @ApiResponse(responseCode = "409", description = "이미 참여 중인 방", content = @Content)
     })
     @PostMapping("/join")
-    public JoinRoomResponseDto joinRoom(
+    public ResponseEntity<JoinRoomResponseDto> joinRoom(
             @Valid @RequestBody JoinRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return roomMemberService.joinRoom(request.inviteCode(), userPrincipal.getMemberId());
+        JoinRoomResponseDto response = roomMemberService.joinRoom(request.inviteCode(), userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "참여자 목록 조회", description = "현재 방의 참여자 목록을 조회합니다.")
@@ -72,10 +71,11 @@ public class RoomMemberController {
         @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content)
     })
     @GetMapping("/{roomId}/members")
-    public List<RoomMemberResponseDto> getRoomMembers(
+    public ResponseEntity<List<RoomMemberResponseDto>> getRoomMembers(
             @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return roomMemberService.getRoomMembers(roomId, userPrincipal.getMemberId());
+        List<RoomMemberResponseDto> response = roomMemberService.getRoomMembers(roomId, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "방 나가기", description = "현재 로그인한 사용자의 방 참여를 종료합니다.")
@@ -86,7 +86,6 @@ public class RoomMemberController {
         @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content)
     })
     @DeleteMapping("/{roomId}/members/me")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> leaveRoom(
             @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {

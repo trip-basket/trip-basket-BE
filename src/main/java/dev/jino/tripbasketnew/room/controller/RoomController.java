@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.jino.tripbasketnew.room.dto.CreateRoomRequestDto;
@@ -53,10 +52,10 @@ public class RoomController {
         @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content)
     })
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public RoomResponseDto createRoom(
+    public ResponseEntity<RoomResponseDto> createRoom(
             @Valid @RequestBody CreateRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return roomService.createRoom(request, userPrincipal.getMemberId());
+        RoomResponseDto response = roomService.createRoom(request, userPrincipal.getMemberId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "방 조회", description = "방 ID로 여행 방 상세 정보를 조회합니다.")
@@ -72,10 +71,11 @@ public class RoomController {
         @ApiResponse(responseCode = "404", description = "방을 찾을 수 없음", content = @Content)
     })
     @GetMapping("/{roomId}")
-    public RoomResponseDto getRoom(
+    public ResponseEntity<RoomResponseDto> getRoom(
             @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return roomService.getRoom(roomId, userPrincipal.getMemberId());
+        RoomResponseDto response = roomService.getRoom(roomId, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "방 수정", description = "방 이름과 여행 기간을 부분 수정합니다.")
@@ -92,11 +92,12 @@ public class RoomController {
         @ApiResponse(responseCode = "404", description = "방을 찾을 수 없음", content = @Content)
     })
     @PatchMapping("/{roomId}")
-    public RoomResponseDto updateRoom(
+    public ResponseEntity<RoomResponseDto> updateRoom(
             @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @RequestBody UpdateRoomRequestDto request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return roomService.updateRoom(roomId, request, userPrincipal.getMemberId());
+        RoomResponseDto response = roomService.updateRoom(roomId, request, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "방 삭제", description = "방을 소프트 딜리트합니다.")
@@ -127,9 +128,10 @@ public class RoomController {
         @ApiResponse(responseCode = "404", description = "방을 찾을 수 없음", content = @Content)
     })
     @PostMapping("/{roomId}/invite-code")
-    public IssueInviteCodeResponseDto issueInviteCode(
+    public ResponseEntity<IssueInviteCodeResponseDto> issueInviteCode(
             @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return roomService.issueInviteCode(roomId, userPrincipal.getMemberId());
+        IssueInviteCodeResponseDto response = roomService.issueInviteCode(roomId, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
     }
 }
