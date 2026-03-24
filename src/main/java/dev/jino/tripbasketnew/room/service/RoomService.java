@@ -2,6 +2,7 @@ package dev.jino.tripbasketnew.room.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import dev.jino.tripbasketnew.member.entity.Member;
 import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import dev.jino.tripbasketnew.room.dto.CreateRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.IssueInviteCodeResponseDto;
+import dev.jino.tripbasketnew.room.dto.MyRoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.UpdateRoomRequestDto;
 import dev.jino.tripbasketnew.room.entity.Room;
@@ -86,6 +88,11 @@ public class RoomService {
         room.issueInviteCode(inviteCode, issuedAt);
 
         return new IssueInviteCodeResponseDto(room.getId(), room.getInviteCode(), room.getInviteCodeIssuedAt());
+    }
+
+    public List<MyRoomResponseDto> getMyRooms(UUID memberId) {
+        memberRepository.findById(memberId).orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        return roomMemberRepository.findMyRooms(memberId);
     }
 
     private void validateTripPeriod(LocalDate tripStartDate, LocalDate tripEndDate) {

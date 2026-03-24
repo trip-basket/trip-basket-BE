@@ -1,6 +1,8 @@
 package dev.jino.tripbasketnew.room.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import dev.jino.tripbasketnew.member.entity.Member;
 import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import dev.jino.tripbasketnew.room.dto.CreateRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.IssueInviteCodeResponseDto;
+import dev.jino.tripbasketnew.room.dto.MyRoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.UpdateRoomRequestDto;
 import dev.jino.tripbasketnew.room.entity.Room;
@@ -76,6 +79,41 @@ class RoomServiceTest {
     }
 
     @Test
+    void getMyRooms_returnsParticipatingRoomsSortedByTripStartDate() {
+        Member member = Member.builder()
+                .id(MEMBER_ID)
+                .email("member@test.com")
+                .nickname("member")
+                .build();
+        List<MyRoomResponseDto> rooms = List.of(
+                new MyRoomResponseDto(
+                        UUID.fromString("33333333-3333-3333-3333-333333333333"),
+                        "오사카 여행",
+                        LocalDate.of(2026, 4, 1),
+                        LocalDate.of(2026, 4, 5),
+                        dev.jino.tripbasketnew.room.entity.RoomRole.MEMBER,
+                        LocalDateTime.of(2026, 3, 20, 12, 0),
+                        4),
+                new MyRoomResponseDto(
+                        UUID.fromString("44444444-4444-4444-4444-444444444444"),
+                        "도쿄 여행",
+                        LocalDate.of(2026, 4, 10),
+                        LocalDate.of(2026, 4, 12),
+                        dev.jino.tripbasketnew.room.entity.RoomRole.OWNER,
+                        LocalDateTime.of(2026, 3, 21, 12, 0),
+                        2));
+        when(memberRepository.findById(MEMBER_ID)).thenReturn(java.util.Optional.of(member));
+        when(roomMemberRepository.findMyRooms(MEMBER_ID)).thenReturn(rooms);
+
+        List<MyRoomResponseDto> response = roomService.getMyRooms(MEMBER_ID);
+
+        assertThat(response).hasSize(2);
+        assertThat(response.get(0).name()).isEqualTo("오사카 여행");
+        assertThat(response.get(0).memberCount()).isEqualTo(4);
+        assertThat(response.get(1).role()).isEqualTo(dev.jino.tripbasketnew.room.entity.RoomRole.OWNER);
+    }
+
+    @Test
     void createRoom_throwsWhenTripPeriodIsInvalid() {
         CreateRoomRequestDto request =
                 new CreateRoomRequestDto("런던 여행", LocalDate.of(2026, 3, 29), LocalDate.of(2026, 3, 16));
@@ -84,6 +122,16 @@ class RoomServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.ROOM_INVALID_TRIP_PERIOD);
+    }
+
+    @Test
+    void getMyRooms_throwsWhenMemberDoesNotExist() {
+        when(memberRepository.findById(MEMBER_ID)).thenReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> roomService.getMyRooms(MEMBER_ID))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.MEMBER_NOT_FOUND);
     }
 
     @Test

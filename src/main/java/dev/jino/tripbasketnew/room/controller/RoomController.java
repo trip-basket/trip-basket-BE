@@ -1,5 +1,6 @@
 package dev.jino.tripbasketnew.room.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.jino.tripbasketnew.room.dto.CreateRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.IssueInviteCodeResponseDto;
+import dev.jino.tripbasketnew.room.dto.MyRoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.UpdateRoomRequestDto;
 import dev.jino.tripbasketnew.room.service.RoomService;
@@ -132,6 +134,24 @@ public class RoomController {
             @Parameter(description = "방 ID") @PathVariable UUID roomId,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
         IssueInviteCodeResponseDto response = roomService.issueInviteCode(roomId, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "내 방 목록 조회", description = "현재 로그인한 사용자가 참여 중인 방 목록을 조회합니다.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "조회 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = MyRoomResponseDto.class))),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음", content = @Content)
+    })
+    @GetMapping
+    public ResponseEntity<List<MyRoomResponseDto>> getMyRooms(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        List<MyRoomResponseDto> response = roomService.getMyRooms(userPrincipal.getMemberId());
         return ResponseEntity.ok(response);
     }
 }
