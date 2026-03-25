@@ -1,7 +1,6 @@
 package dev.jino.tripbasketnew.room.service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +14,6 @@ import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import dev.jino.tripbasketnew.member.entity.Member;
 import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import dev.jino.tripbasketnew.room.dto.JoinRoomResponseDto;
-import dev.jino.tripbasketnew.room.dto.RoomMemberResponseDto;
 import dev.jino.tripbasketnew.room.entity.Room;
 import dev.jino.tripbasketnew.room.entity.RoomMember;
 import dev.jino.tripbasketnew.room.entity.RoomRole;
@@ -53,36 +51,6 @@ class RoomMemberServiceTest {
     void setUp() {
         roomMemberService =
                 new RoomMemberService(roomMemberRepository, roomAccessPolicy, memberRepository, roomRepository);
-    }
-
-    @Test
-    void getRoomMembers_returnsVisibleMembers() {
-        UUID roomId = UUID.randomUUID();
-        Member owner = Member.builder()
-                .id(OWNER_ID)
-                .email("owner@test.com")
-                .nickname("owner")
-                .build();
-        Member member = Member.builder()
-                .id(MEMBER_ID)
-                .email("member@test.com")
-                .nickname("member")
-                .build();
-        Room room = Room.builder()
-                .name("런던 여행")
-                .tripStartDate(LocalDate.of(2026, 3, 16))
-                .tripEndDate(LocalDate.of(2026, 3, 29))
-                .build();
-
-        when(roomAccessPolicy.validateParticipantAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
-        when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId))
-                .thenReturn(List.of(RoomMember.owner(room, owner), RoomMember.member(room, member)));
-
-        List<RoomMemberResponseDto> response = roomMemberService.getRoomMembers(roomId, OWNER_ID);
-
-        assertThat(response).hasSize(2);
-        assertThat(response.get(0).role()).isEqualTo(RoomRole.OWNER);
-        assertThat(response.get(1).nickname()).isEqualTo("member");
     }
 
     @Test

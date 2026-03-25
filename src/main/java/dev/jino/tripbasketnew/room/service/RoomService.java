@@ -16,6 +16,7 @@ import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import dev.jino.tripbasketnew.room.dto.CreateRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.IssueInviteCodeResponseDto;
 import dev.jino.tripbasketnew.room.dto.MyRoomResponseDto;
+import dev.jino.tripbasketnew.room.dto.RoomMemberResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.UpdateRoomRequestDto;
 import dev.jino.tripbasketnew.room.entity.Room;
@@ -102,7 +103,21 @@ public class RoomService {
     }
 
     private RoomResponseDto toResponse(Room room) {
+        List<RoomMemberResponseDto> members =
+                roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(room.getId()).stream()
+                        .map(roomMember -> new RoomMemberResponseDto(
+                                roomMember.getMember().getId(),
+                                roomMember.getMember().getNickname(),
+                                roomMember.getRole(),
+                                roomMember.getCreatedAt()))
+                        .toList();
+
         return new RoomResponseDto(
-                room.getId(), room.getName(), room.getTripStartDate(), room.getTripEndDate(), room.getCreatedAt());
+                room.getId(),
+                room.getName(),
+                room.getTripStartDate(),
+                room.getTripEndDate(),
+                room.getCreatedAt(),
+                members);
     }
 }

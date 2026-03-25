@@ -2,6 +2,7 @@ package dev.jino.tripbasketnew.room.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,4 +20,6 @@ public record RoomResponseDto(
         LocalDate tripEndDate,
 
         @Schema(description = "생성 일시", example = "2026-03-22T12:34:56")
-        LocalDateTime createdAt) {}
+        LocalDateTime createdAt,
+
+        @Schema(description = "참여자 목록") List<RoomMemberResponseDto> members) {}

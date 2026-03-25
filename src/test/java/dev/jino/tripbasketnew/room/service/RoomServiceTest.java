@@ -3,6 +3,7 @@ package dev.jino.tripbasketnew.room.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,10 +19,12 @@ import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import dev.jino.tripbasketnew.room.dto.CreateRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.IssueInviteCodeResponseDto;
 import dev.jino.tripbasketnew.room.dto.MyRoomResponseDto;
+import dev.jino.tripbasketnew.room.dto.RoomMemberResponseDto;
 import dev.jino.tripbasketnew.room.dto.RoomResponseDto;
 import dev.jino.tripbasketnew.room.dto.UpdateRoomRequestDto;
 import dev.jino.tripbasketnew.room.entity.Room;
 import dev.jino.tripbasketnew.room.entity.RoomMember;
+import dev.jino.tripbasketnew.room.entity.RoomRole;
 import dev.jino.tripbasketnew.room.policy.RoomAccessPolicy;
 import dev.jino.tripbasketnew.room.repository.RoomMemberRepository;
 import dev.jino.tripbasketnew.room.repository.RoomRepository;
@@ -66,15 +69,19 @@ class RoomServiceTest {
                 .build();
         CreateRoomRequestDto request =
                 new CreateRoomRequestDto("런던 여행", LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 29));
-        when(memberRepository.findById(OWNER_ID)).thenReturn(java.util.Optional.of(owner));
+        RoomMember ownerMembership = RoomMember.owner(newUnsavedRoom("런던 여행"), owner);
+        when(memberRepository.findById(OWNER_ID)).thenReturn(Optional.of(owner));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(roomMemberRepository.save(any(RoomMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(null)).thenReturn(List.of(ownerMembership));
 
         RoomResponseDto response = roomService.createRoom(request, OWNER_ID);
 
         assertThat(response.name()).isEqualTo("런던 여행");
         assertThat(response.tripStartDate()).isEqualTo(LocalDate.of(2026, 3, 16));
         assertThat(response.tripEndDate()).isEqualTo(LocalDate.of(2026, 3, 29));
+        assertThat(response.members()).hasSize(1);
+        assertThat(response.members().get(0).role()).isEqualTo(RoomRole.OWNER);
         verify(roomMemberRepository).save(any(RoomMember.class));
     }
 
@@ -102,7 +109,7 @@ class RoomServiceTest {
                         dev.jino.tripbasketnew.room.entity.RoomRole.OWNER,
                         LocalDateTime.of(2026, 3, 21, 12, 0),
                         2));
-        when(memberRepository.findById(MEMBER_ID)).thenReturn(java.util.Optional.of(member));
+        when(memberRepository.findById(MEMBER_ID)).thenReturn(Optional.of(member));
         when(roomMemberRepository.findMyRooms(MEMBER_ID)).thenReturn(rooms);
 
         List<MyRoomResponseDto> response = roomService.getMyRooms(MEMBER_ID);
@@ -126,7 +133,7 @@ class RoomServiceTest {
 
     @Test
     void getMyRooms_throwsWhenMemberDoesNotExist() {
-        when(memberRepository.findById(MEMBER_ID)).thenReturn(java.util.Optional.empty());
+        when(memberRepository.findById(MEMBER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> roomService.getMyRooms(MEMBER_ID))
                 .isInstanceOf(BusinessException.class)
@@ -138,6 +145,7 @@ class RoomServiceTest {
     void getRoom_returnsParticipantRoom() {
         UUID roomId = UUID.randomUUID();
         Room room = Room.builder()
+                .id(roomId)
                 .name("런던 여행")
                 .tripStartDate(LocalDate.of(2026, 3, 16))
                 .tripEndDate(LocalDate.of(2026, 3, 29))
@@ -147,17 +155,22 @@ class RoomServiceTest {
                 .email("member@test.com")
                 .nickname("member")
                 .build();
-        when(roomAccessPolicy.validateParticipantAccess(roomId, MEMBER_ID)).thenReturn(RoomMember.member(room, member));
+        RoomMember roomMember = RoomMember.member(room, member);
+        when(roomAccessPolicy.validateParticipantAccess(roomId, MEMBER_ID)).thenReturn(roomMember);
+        when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId)).thenReturn(List.of(roomMember));
 
         RoomResponseDto response = roomService.getRoom(roomId, MEMBER_ID);
 
         assertThat(response.name()).isEqualTo("런던 여행");
+        assertThat(response.members())
+                .containsExactly(new RoomMemberResponseDto(MEMBER_ID, "member", RoomRole.MEMBER, null));
     }
 
     @Test
     void updateRoom_mergesProvidedFields() {
         UUID roomId = UUID.randomUUID();
         Room room = Room.builder()
+                .id(roomId)
                 .name("런던 여행")
                 .tripStartDate(LocalDate.of(2026, 3, 16))
                 .tripEndDate(LocalDate.of(2026, 3, 29))
@@ -167,7 +180,9 @@ class RoomServiceTest {
                 .email("owner@test.com")
                 .nickname("owner")
                 .build();
-        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
+        RoomMember ownerMembership = RoomMember.owner(room, owner);
+        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(ownerMembership);
+        when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId)).thenReturn(List.of(ownerMembership));
 
         RoomResponseDto response =
                 roomService.updateRoom(roomId, new UpdateRoomRequestDto("런던 여행 수정", null, null), OWNER_ID);
@@ -175,12 +190,14 @@ class RoomServiceTest {
         assertThat(response.name()).isEqualTo("런던 여행 수정");
         assertThat(response.tripStartDate()).isEqualTo(LocalDate.of(2026, 3, 16));
         assertThat(response.tripEndDate()).isEqualTo(LocalDate.of(2026, 3, 29));
+        assertThat(response.members()).hasSize(1);
     }
 
     @Test
     void deleteRoom_deletesExistingRoom() {
         UUID roomId = UUID.randomUUID();
         Room room = Room.builder()
+                .id(roomId)
                 .name("런던 여행")
                 .tripStartDate(LocalDate.of(2026, 3, 16))
                 .tripEndDate(LocalDate.of(2026, 3, 29))
@@ -201,6 +218,7 @@ class RoomServiceTest {
     void issueInviteCode_generatesNewCodeForOwner() {
         UUID roomId = UUID.randomUUID();
         Room room = Room.builder()
+                .id(roomId)
                 .name("런던 여행")
                 .tripStartDate(LocalDate.of(2026, 3, 16))
                 .tripEndDate(LocalDate.of(2026, 3, 29))
@@ -216,5 +234,13 @@ class RoomServiceTest {
 
         assertThat(response.inviteCode()).hasSize(6);
         assertThat(response.issuedAt()).isNotNull();
+    }
+
+    private Room newUnsavedRoom(String name) {
+        return Room.builder()
+                .name(name)
+                .tripStartDate(LocalDate.of(2026, 3, 16))
+                .tripEndDate(LocalDate.of(2026, 3, 29))
+                .build();
     }
 }

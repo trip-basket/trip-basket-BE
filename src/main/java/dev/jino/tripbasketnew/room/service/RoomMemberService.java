@@ -1,6 +1,5 @@
 package dev.jino.tripbasketnew.room.service;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -11,7 +10,6 @@ import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import dev.jino.tripbasketnew.member.entity.Member;
 import dev.jino.tripbasketnew.member.repository.MemberRepository;
 import dev.jino.tripbasketnew.room.dto.JoinRoomResponseDto;
-import dev.jino.tripbasketnew.room.dto.RoomMemberResponseDto;
 import dev.jino.tripbasketnew.room.entity.Room;
 import dev.jino.tripbasketnew.room.entity.RoomMember;
 import dev.jino.tripbasketnew.room.entity.RoomRole;
@@ -29,18 +27,6 @@ public class RoomMemberService {
     private final RoomAccessPolicy roomAccessPolicy;
     private final MemberRepository memberRepository;
     private final RoomRepository roomRepository;
-
-    public List<RoomMemberResponseDto> getRoomMembers(UUID roomId, UUID memberId) {
-        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
-
-        return roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId).stream()
-                .map(roomMember -> new RoomMemberResponseDto(
-                        roomMember.getMember().getId(),
-                        roomMember.getMember().getNickname(),
-                        roomMember.getRole(),
-                        roomMember.getCreatedAt()))
-                .toList();
-    }
 
     @Transactional
     public JoinRoomResponseDto joinRoom(String inviteCode, UUID memberId) {

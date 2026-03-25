@@ -1,13 +1,11 @@
 package dev.jino.tripbasketnew.room.controller;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.jino.tripbasketnew.room.dto.JoinRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.JoinRoomResponseDto;
-import dev.jino.tripbasketnew.room.dto.RoomMemberResponseDto;
 import dev.jino.tripbasketnew.room.service.RoomMemberService;
 import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,26 +52,6 @@ public class RoomMemberController {
     public ResponseEntity<JoinRoomResponseDto> joinRoom(
             @Valid @RequestBody JoinRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
         JoinRoomResponseDto response = roomMemberService.joinRoom(request.inviteCode(), userPrincipal.getMemberId());
-        return ResponseEntity.ok(response);
-    }
-
-    @Operation(summary = "참여자 목록 조회", description = "현재 방의 참여자 목록을 조회합니다.")
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "조회 성공",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = RoomMemberResponseDto.class))),
-        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
-        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content)
-    })
-    @GetMapping("/{roomId}/members")
-    public ResponseEntity<List<RoomMemberResponseDto>> getRoomMembers(
-            @Parameter(description = "방 ID") @PathVariable UUID roomId,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        List<RoomMemberResponseDto> response = roomMemberService.getRoomMembers(roomId, userPrincipal.getMemberId());
         return ResponseEntity.ok(response);
     }
 
