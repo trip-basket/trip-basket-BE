@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,6 +33,7 @@ import dev.jino.tripbasketnew.room.repository.RoomRepository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -207,11 +209,15 @@ class RoomServiceTest {
                 .email("owner@test.com")
                 .nickname("owner")
                 .build();
-        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(RoomMember.owner(room, owner));
+        RoomMember ownerMembership = RoomMember.owner(room, owner);
+        when(roomAccessPolicy.validateOwnerAccess(roomId, OWNER_ID)).thenReturn(ownerMembership);
+        when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId)).thenReturn(List.of(ownerMembership));
 
         roomService.deleteRoom(roomId, OWNER_ID);
 
-        verify(roomRepository).delete(room);
+        InOrder deleteOrder = inOrder(roomMemberRepository, roomRepository);
+        deleteOrder.verify(roomMemberRepository).deleteAll(List.of(ownerMembership));
+        deleteOrder.verify(roomRepository).delete(room);
     }
 
     @Test

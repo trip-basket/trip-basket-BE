@@ -77,7 +77,9 @@ public class RoomService {
     @Transactional
     public void deleteRoom(UUID roomId, UUID memberId) {
         Room room = roomAccessPolicy.validateOwnerAccess(roomId, memberId).getRoom();
-        // 추후 방 삭제 시 RoomMember, PlanItem, TravelSegment, Todo, Reaction 등 하위 자원도 함께 소프트 딜리트되어야 한다.
+        List<RoomMember> roomMembers = roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(room.getId());
+        roomMemberRepository.deleteAll(roomMembers);
+        // 추후 방 삭제 시 PlanItem, TravelSegment, Todo, Reaction 등 다른 하위 자원도 함께 소프트 딜리트되어야 한다.
         roomRepository.delete(room);
     }
 
