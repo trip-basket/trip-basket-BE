@@ -2,70 +2,30 @@ package dev.jino.tripbasketnew.room.controller;
 
 import java.util.UUID;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.jino.tripbasketnew.room.controller.api.RoomMemberApi;
 import dev.jino.tripbasketnew.room.dto.JoinRoomRequestDto;
 import dev.jino.tripbasketnew.room.dto.JoinRoomResponseDto;
 import dev.jino.tripbasketnew.room.service.RoomMemberService;
 import dev.jino.tripbasketnew.security.principal.UserPrincipal;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/rooms")
-@Tag(name = "RoomMember", description = "여행 방 참여자 API")
-public class RoomMemberController {
+public class RoomMemberController implements RoomMemberApi {
 
     private final RoomMemberService roomMemberService;
 
-    @Operation(summary = "방 참여", description = "초대코드로 방에 참여합니다.")
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "참여 성공",
-                content =
-                        @Content(
-                                mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                schema = @Schema(implementation = JoinRoomResponseDto.class))),
-        @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
-        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
-        @ApiResponse(responseCode = "404", description = "유효하지 않은 초대코드", content = @Content),
-        @ApiResponse(responseCode = "409", description = "이미 참여 중인 방", content = @Content)
-    })
-    @PostMapping("/join")
-    public ResponseEntity<JoinRoomResponseDto> joinRoom(
-            @Valid @RequestBody JoinRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    @Override
+    public ResponseEntity<JoinRoomResponseDto> joinRoom(JoinRoomRequestDto request, UserPrincipal userPrincipal) {
         JoinRoomResponseDto response = roomMemberService.joinRoom(request.inviteCode(), userPrincipal.getMemberId());
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "방 나가기", description = "현재 로그인한 사용자의 방 참여를 종료합니다.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "나가기 성공"),
-        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
-        @ApiResponse(responseCode = "400", description = "방장은 나갈 수 없음", content = @Content),
-        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content)
-    })
-    @DeleteMapping("/{roomId}/members/me")
-    public ResponseEntity<Void> leaveRoom(
-            @Parameter(description = "방 ID") @PathVariable UUID roomId,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    @Override
+    public ResponseEntity<Void> leaveRoom(UUID roomId, UserPrincipal userPrincipal) {
         roomMemberService.leaveRoom(roomId, userPrincipal.getMemberId());
         return ResponseEntity.noContent().build();
     }

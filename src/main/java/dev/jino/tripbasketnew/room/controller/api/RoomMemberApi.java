@@ -1,0 +1,59 @@
+package dev.jino.tripbasketnew.room.controller.api;
+
+import java.util.UUID;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import dev.jino.tripbasketnew.room.dto.JoinRoomRequestDto;
+import dev.jino.tripbasketnew.room.dto.JoinRoomResponseDto;
+import dev.jino.tripbasketnew.security.principal.UserPrincipal;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
+@RequestMapping("/api/rooms")
+@Tag(name = "RoomMember", description = "여행 방 참여자 API")
+public interface RoomMemberApi {
+
+    @Operation(summary = "방 참여", description = "초대코드로 방에 참여합니다.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "참여 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = JoinRoomResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "404", description = "유효하지 않은 초대코드", content = @Content),
+        @ApiResponse(responseCode = "409", description = "이미 참여 중인 방", content = @Content)
+    })
+    @PostMapping("/join")
+    ResponseEntity<JoinRoomResponseDto> joinRoom(
+            @Valid @RequestBody JoinRoomRequestDto request, @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "방 나가기", description = "현재 로그인한 사용자의 방 참여를 종료합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "나가기 성공"),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "400", description = "방장은 나갈 수 없음", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content)
+    })
+    @DeleteMapping("/{roomId}/members/me")
+    ResponseEntity<Void> leaveRoom(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+}
