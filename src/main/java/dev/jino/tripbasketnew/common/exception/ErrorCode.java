@@ -21,7 +21,13 @@ public enum ErrorCode {
     ROOM_OWNER_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "Room owner cannot leave", "방장은 나갈 수 없습니다. 방 삭제를 이용해주세요."),
 
     // Place 관련
-    PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다.");
+    PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다."),
+    PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "Place not found", "해당 장소를 찾을 수 없습니다."),
+    PLACE_INVALID_ID(HttpStatus.BAD_REQUEST, "Invalid placeId", "유효하지 않은 장소 ID입니다."),
+    PLACE_PROVIDER_ERROR(
+            HttpStatus.BAD_GATEWAY, "Failed to fetch place detail from Google", "장소 정보를 불러오는 중 오류가 발생했습니다."),
+    PLACE_PROVIDER_NOT_CONFIGURED(
+            HttpStatus.INTERNAL_SERVER_ERROR, "GOOGLE_MAPS_API_KEY is not configured", "장소 정보 연동 설정이 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String errorMessage;

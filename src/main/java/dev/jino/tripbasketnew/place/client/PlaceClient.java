@@ -2,15 +2,16 @@ package dev.jino.tripbasketnew.place.client;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
+import dev.jino.tripbasketnew.common.exception.BusinessException;
+import dev.jino.tripbasketnew.common.exception.ErrorCode;
 
 @Component
 public class PlaceClient {
@@ -41,8 +42,7 @@ public class PlaceClient {
 
     public JsonNode fetchPlaceDetail(String placeId) {
         if (!StringUtils.hasText(apiKey)) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "GOOGLE_MAPS_API_KEY is not configured");
+            throw new BusinessException(ErrorCode.PLACE_PROVIDER_NOT_CONFIGURED);
         }
 
         try {
@@ -58,11 +58,11 @@ public class PlaceClient {
                     .retrieve()
                     .body(JsonNode.class);
         } catch (HttpClientErrorException.NotFound ex) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found");
+            throw new BusinessException(ErrorCode.PLACE_NOT_FOUND, ex);
         } catch (HttpClientErrorException.BadRequest ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid placeId");
+            throw new BusinessException(ErrorCode.PLACE_INVALID_ID, ex);
         } catch (RestClientResponseException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to fetch place detail from Google");
+            throw new BusinessException(ErrorCode.PLACE_PROVIDER_ERROR, ex);
         }
     }
 
