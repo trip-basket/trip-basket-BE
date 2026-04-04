@@ -90,6 +90,75 @@
                 font-size: 1.05rem;
             }
 
+            .document h4,
+            .document h5,
+            .document h6 {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-top: 14px;
+                margin-bottom: 4px;
+                padding: 8px 12px;
+                border-radius: 12px;
+                border: 1px solid transparent;
+                line-height: 1.35;
+                font-size: 0.96rem;
+                font-weight: 800;
+                letter-spacing: -0.01em;
+                box-shadow: 0 4px 14px rgba(31, 42, 55, 0.06);
+            }
+
+            .document h4 {
+                color: #14361f;
+                background: #e3f7e7;
+                border-color: #8fd19a;
+            }
+
+            .document h5 {
+                color: #4e3c00;
+                background: #fff3bf;
+                border-color: #f2cf5b;
+            }
+
+            .document h6 {
+                color: #681212;
+                background: #ffe0e0;
+                border-color: #f1a2a2;
+            }
+
+            .document h4::before,
+            .document h5::before,
+            .document h6::before {
+                content: "";
+                width: 10px;
+                height: 10px;
+                border-radius: 999px;
+                flex: 0 0 auto;
+            }
+
+            .document h4::before {
+                background: #2f9e44;
+            }
+
+            .document h5::before {
+                background: #e0a800;
+            }
+
+            .document h6::before {
+                background: #d63333;
+            }
+
+            .document h4 code,
+            .document h5 code,
+            .document h6 code {
+                padding: 0;
+                background: transparent;
+                color: inherit;
+                font-size: 1em;
+                font-weight: inherit;
+                font-family: inherit;
+            }
+
             .document p {
                 margin: 10px 0 0;
                 color: var(--muted);
