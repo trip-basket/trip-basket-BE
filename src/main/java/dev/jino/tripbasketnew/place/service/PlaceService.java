@@ -1,5 +1,6 @@
 package dev.jino.tripbasketnew.place.service;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,9 @@ import dev.jino.tripbasketnew.common.exception.BusinessException;
 import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import dev.jino.tripbasketnew.place.client.PlaceClient;
 import dev.jino.tripbasketnew.place.dto.PlaceDetailResponseDto;
+import dev.jino.tripbasketnew.place.entity.Place;
+import dev.jino.tripbasketnew.place.entity.PlaceOpeningHour;
+import dev.jino.tripbasketnew.place.repository.PlaceRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,27 +23,81 @@ import lombok.RequiredArgsConstructor;
 public class PlaceService {
 
     private final PlaceClient placeClient;
+    private final PlaceRepository placeRepository;
 
-    public PlaceDetailResponseDto getPlaceDetail(String placeId) {
-        if (!StringUtils.hasText(placeId)) {
+    public PlaceDetailResponseDto getPlaceDetail(String googlePlaceId) {
+        ParsedPlaceDetail detail = fetchAndParse(googlePlaceId);
+        return toResponse(detail);
+    }
+
+    public Place getOrSyncPlace(String googlePlaceId) {
+        ParsedPlaceDetail detail = fetchAndParse(googlePlaceId);
+        return placeRepository
+                .findByGooglePlaceId(detail.googlePlaceId())
+                .map(place -> {
+                    place.updateDetails(
+                            detail.placeName(),
+                            detail.lat(),
+                            detail.lng(),
+                            detail.category(),
+                            detail.formattedAddress(),
+                            detail.rating(),
+                            detail.reviewCount(),
+                            detail.priceLevel(),
+                            detail.photoUrl(),
+                            detail.openingHours());
+                    return place;
+                })
+                .orElseGet(() -> placeRepository.save(Place.builder()
+                        .googlePlaceId(detail.googlePlaceId())
+                        .placeName(detail.placeName())
+                        .lat(detail.lat())
+                        .lng(detail.lng())
+                        .category(detail.category())
+                        .formattedAddress(detail.formattedAddress())
+                        .rating(detail.rating())
+                        .reviewCount(detail.reviewCount())
+                        .priceLevel(detail.priceLevel())
+                        .photoUrl(detail.photoUrl())
+                        .openingHours(detail.openingHours())
+                        .build()));
+    }
+
+    private ParsedPlaceDetail fetchAndParse(String googlePlaceId) {
+        if (!StringUtils.hasText(googlePlaceId)) {
             throw new BusinessException(ErrorCode.PLACE_ID_BLANK);
         }
 
-        JsonNode detail = placeClient.fetchPlaceDetail(placeId);
-        String googlePlaceId = textOrNull(detail, "id");
+        JsonNode detail = placeClient.fetchPlaceDetail(googlePlaceId);
         JsonNode location = detail.path("location");
         String photoName = firstPhotoName(detail.path("photos"));
 
-        return new PlaceDetailResponseDto(
-                googlePlaceId,
+        return new ParsedPlaceDetail(
+                textOrNull(detail, "id"),
                 textOrNull(detail.path("displayName"), "text"),
                 textOrNull(detail, "formattedAddress"),
-                new PlaceDetailResponseDto.Position(
-                        doubleOrNull(location, "latitude"), doubleOrNull(location, "longitude")),
-                parseOpeningHours(detail.path("regularOpeningHours").path("periods")),
+                doubleOrNull(location, "latitude"),
+                doubleOrNull(location, "longitude"),
+                parseOpeningHourEntities(detail.path("regularOpeningHours").path("periods")),
                 parsePriceLevel(detail.path("priceLevel")),
+                doubleOrNull(detail, "rating"),
+                intOrNull(detail, "userRatingCount"),
                 placeClient.buildPhotoMediaUrl(photoName),
                 parseCategory(detail));
+    }
+
+    private PlaceDetailResponseDto toResponse(ParsedPlaceDetail detail) {
+        return new PlaceDetailResponseDto(
+                detail.googlePlaceId(),
+                detail.placeName(),
+                detail.formattedAddress(),
+                new PlaceDetailResponseDto.Position(detail.lat(), detail.lng()),
+                toOpeningHourResponses(detail.openingHours()),
+                detail.priceLevel(),
+                detail.rating(),
+                detail.reviewCount(),
+                detail.photoUrl(),
+                detail.category());
     }
 
     private String textOrNull(JsonNode node, String fieldName) {
@@ -66,8 +124,8 @@ public class PlaceService {
         return value.asInt();
     }
 
-    private List<PlaceDetailResponseDto.OpeningHour> parseOpeningHours(JsonNode periodsNode) {
-        List<PlaceDetailResponseDto.OpeningHour> result = new ArrayList<>();
+    private List<PlaceOpeningHour> parseOpeningHourEntities(JsonNode periodsNode) {
+        List<PlaceOpeningHour> result = new ArrayList<>();
         if (periodsNode == null || !periodsNode.isArray()) {
             return result;
         }
@@ -76,20 +134,34 @@ public class PlaceService {
             JsonNode openNode = period.path("open");
             JsonNode closeNode = period.path("close");
             Integer day = openNode.has("day") ? openNode.get("day").asInt() : null;
-            String open = formatTime(openNode);
-            String close = formatTime(closeNode);
-            result.add(new PlaceDetailResponseDto.OpeningHour(day, open, close));
+            result.add(PlaceOpeningHour.of(day, parseTime(openNode), parseTime(closeNode)));
         }
         return result;
     }
 
-    private String formatTime(JsonNode timeNode) {
+    private LocalTime parseTime(JsonNode timeNode) {
         if (timeNode == null || timeNode.isMissingNode() || !timeNode.has("hour") || !timeNode.has("minute")) {
             return null;
         }
         int hour = timeNode.get("hour").asInt();
         int minute = timeNode.get("minute").asInt();
-        return String.format("%02d:%02d", hour, minute);
+        return LocalTime.of(hour, minute);
+    }
+
+    private List<PlaceDetailResponseDto.OpeningHour> toOpeningHourResponses(List<PlaceOpeningHour> openingHours) {
+        return openingHours.stream()
+                .map(openingHour -> new PlaceDetailResponseDto.OpeningHour(
+                        openingHour.getDay(),
+                        formatTime(openingHour.getOpenAt()),
+                        formatTime(openingHour.getCloseAt())))
+                .toList();
+    }
+
+    private String formatTime(LocalTime time) {
+        if (time == null) {
+            return null;
+        }
+        return String.format("%02d:%02d", time.getHour(), time.getMinute());
     }
 
     private Integer parsePriceLevel(JsonNode priceLevelNode) {
@@ -129,4 +201,17 @@ public class PlaceService {
         }
         return null;
     }
+
+    private record ParsedPlaceDetail(
+            String googlePlaceId,
+            String placeName,
+            String formattedAddress,
+            Double lat,
+            Double lng,
+            List<PlaceOpeningHour> openingHours,
+            Integer priceLevel,
+            Double rating,
+            Integer reviewCount,
+            String photoUrl,
+            String category) {}
 }

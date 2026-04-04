@@ -8,14 +8,16 @@ public record PlaceDetailResponseDto(
         @Schema(description = "Google Place ID", example = "ChIJdd4hrwug2EcRmSrV3Vo6llI")
         String googlePlaceId,
 
-        @Schema(description = "장소 이름", example = "대영박물관") String name,
+        @Schema(description = "장소 이름", example = "대영박물관") String placeName,
 
-        @Schema(description = "주소", example = "Great Russell St, London WC1B 3DG")
-        String address,
+        @Schema(description = "포맷팅된 주소", example = "Great Russell St, London WC1B 3DG")
+        String formattedAddress,
 
         @Schema(description = "좌표 정보") Position position,
         @Schema(description = "영업 시간 목록") List<OpeningHour> openingHours,
         @Schema(description = "가격 레벨(0~4)", example = "2") Integer priceLevel,
+        @Schema(description = "평점", example = "4.7") Double rating,
+        @Schema(description = "리뷰 수", example = "120345") Integer reviewCount,
 
         @Schema(description = "대표 사진 URL", example = "https://places.googleapis.com/v1/...")
         String photoUrl,
