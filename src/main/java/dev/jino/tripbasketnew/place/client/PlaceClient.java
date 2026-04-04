@@ -28,7 +28,7 @@ public class PlaceClient {
             @Value("${google.maps.api-key:}") String apiKey,
             @Value("${google.maps.places.base-url:https://places.googleapis.com/v1/places}") String baseUrl,
             @Value(
-                            "${google.maps.places.field-mask:id,displayName,formattedAddress,location,regularOpeningHours,priceLevel,photos,primaryType,types}")
+                            "${google.maps.places.field-mask:id,displayName,formattedAddress,location,regularOpeningHours,priceLevel,photos,primaryType,types,rating,userRatingCount}")
                     String fieldMask,
             @Value("${google.maps.places.language-code:ko}") String languageCode,
             @Value("${google.maps.places.photo-max-height-px:800}") int photoMaxHeightPx) {
