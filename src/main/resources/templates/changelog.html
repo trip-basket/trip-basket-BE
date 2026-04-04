@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title th:text="${pageTitle}">Trip Basket Changelog</title>
+        <style>
+            :root {
+                --bg: #f5efe4;
+                --paper: rgba(255, 252, 247, 0.92);
+                --ink: #1f2a37;
+                --muted: #5f6b76;
+                --line: rgba(31, 42, 55, 0.12);
+                --accent: #c5632a;
+                --accent-soft: rgba(197, 99, 42, 0.12);
+                --shadow: 0 24px 70px rgba(60, 40, 10, 0.12);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                font-family: "Pretendard", "Noto Sans KR", sans-serif;
+                color: var(--ink);
+                background:
+                    radial-gradient(circle at top left, rgba(212, 151, 67, 0.2), transparent 30%),
+                    linear-gradient(180deg, #f8f1e3 0%, #f2ece2 45%, #efe8df 100%);
+            }
+
+            main {
+                width: min(920px, calc(100% - 32px));
+                margin: 48px auto;
+                padding: 40px 28px;
+                border: 1px solid var(--line);
+                border-radius: 28px;
+                background: var(--paper);
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(14px);
+            }
+
+            .eyebrow {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 16px;
+                padding: 8px 12px;
+                border-radius: 999px;
+                background: var(--accent-soft);
+                color: var(--accent);
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            .document {
+                line-height: 1.75;
+                font-size: 16px;
+            }
+
+            .document > :first-child {
+                margin-top: 0;
+            }
+
+            .document h1,
+            .document h2,
+            .document h3 {
+                line-height: 1.2;
+                letter-spacing: -0.02em;
+            }
+
+            .document h1 {
+                margin: 0 0 12px;
+                font-size: clamp(2.3rem, 5vw, 3.6rem);
+            }
+
+            .document h2 {
+                margin-top: 42px;
+                padding-top: 20px;
+                border-top: 1px solid var(--line);
+                font-size: clamp(1.4rem, 3vw, 1.9rem);
+            }
+
+            .document h3 {
+                margin-top: 24px;
+                margin-bottom: 8px;
+                color: var(--accent);
+                font-size: 1.05rem;
+            }
+
+            .document p {
+                margin: 10px 0 0;
+                color: var(--muted);
+            }
+
+            .document ul {
+                margin: 12px 0 0;
+                padding-left: 22px;
+            }
+
+            .document li + li {
+                margin-top: 8px;
+            }
+
+            .document code {
+                padding: 0.18rem 0.42rem;
+                border-radius: 8px;
+                background: rgba(31, 42, 55, 0.08);
+                font-size: 0.95em;
+            }
+
+            .document a {
+                color: var(--accent);
+            }
+
+            @media (max-width: 640px) {
+                main {
+                    width: min(100% - 20px, 920px);
+                    margin: 20px auto;
+                    padding: 24px 18px;
+                    border-radius: 20px;
+                }
+
+                .document {
+                    font-size: 15px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div class="eyebrow">Frontend Reference</div>
+            <article class="document" th:utext="${contentHtml}"></article>
+        </main>
+    </body>
+</html>

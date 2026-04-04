@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestCache(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers(
                                 "/",
+                                "/changelog",
                                 "/error",
                                 "/h2-console/**",
                                 "/swagger-ui.html",
