@@ -1,5 +1,6 @@
 package dev.jino.tripbasketnew.block.service;
 
+import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import dev.jino.tripbasketnew.block.dto.BlockPlaceResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockReactionResponseDto;
@@ -18,6 +20,8 @@ import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
 import dev.jino.tripbasketnew.block.repository.BlockRepository;
+import dev.jino.tripbasketnew.common.exception.BusinessException;
+import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import dev.jino.tripbasketnew.place.entity.Place;
 import dev.jino.tripbasketnew.place.entity.PlaceOpeningHour;
 import dev.jino.tripbasketnew.place.service.PlaceService;
@@ -38,7 +42,7 @@ public class BlockService {
     public BlockResponseDto createBlock(UUID roomId, CreateBlockRequestDto request, UUID memberId) {
         RoomMember roomMember = roomAccessPolicy.validateParticipantAccess(roomId, memberId);
         Place place = placeService.getOrSyncPlace(request.googlePlaceId());
-        ZoneId zoneId = ZoneId.of(place.getTimezoneId());
+        ZoneId zoneId = resolveZoneId(place.getTimezoneId());
 
         Block block = Block.create(
                 roomMember.getRoom(),
@@ -72,6 +76,18 @@ public class BlockService {
                 block.getAddedAt(),
                 List.<BlockReactionResponseDto>of(),
                 List.<BlockTodoResponseDto>of());
+    }
+
+    private ZoneId resolveZoneId(String timezoneId) {
+        if (!StringUtils.hasText(timezoneId)) {
+            throw new BusinessException(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
+        }
+
+        try {
+            return ZoneId.of(timezoneId);
+        } catch (DateTimeException exception) {
+            throw new BusinessException(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
+        }
     }
 
     private BlockPlaceResponseDto toPlaceResponse(Place place) {
@@ -116,13 +132,17 @@ public class BlockService {
         if (utcDateTime == null) {
             return null;
         }
-        return utcDateTime.atZoneSameInstant(ZoneId.of(timezoneId)).toLocalDateTime();
+        return utcDateTime.atZoneSameInstant(resolveZoneId(timezoneId)).toLocalDateTime();
     }
 
     private Integer toOffsetMinutes(OffsetDateTime utcDateTime, String timezoneId) {
         if (utcDateTime == null) {
             return null;
         }
-        return utcDateTime.atZoneSameInstant(ZoneId.of(timezoneId)).getOffset().getTotalSeconds() / 60;
+        return utcDateTime
+                        .atZoneSameInstant(resolveZoneId(timezoneId))
+                        .getOffset()
+                        .getTotalSeconds()
+                / 60;
     }
 }

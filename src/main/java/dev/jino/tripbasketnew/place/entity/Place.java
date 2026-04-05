@@ -60,7 +60,7 @@ public class Place extends SoftDeletableEntity {
     @Column(name = "photo_url")
     private String photoUrl;
 
-    @Column(name = "timezone_id")
+    @Column(name = "timezone_id", nullable = false)
     private String timezoneId;
 
     @ElementCollection(fetch = FetchType.EAGER)

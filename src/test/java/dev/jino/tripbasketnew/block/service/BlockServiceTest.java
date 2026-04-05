@@ -17,6 +17,8 @@ import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import dev.jino.tripbasketnew.block.repository.BlockRepository;
+import dev.jino.tripbasketnew.common.exception.BusinessException;
+import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import dev.jino.tripbasketnew.member.entity.Member;
 import dev.jino.tripbasketnew.place.entity.Place;
 import dev.jino.tripbasketnew.place.entity.PlaceOpeningHour;
@@ -26,6 +28,7 @@ import dev.jino.tripbasketnew.room.entity.RoomMember;
 import dev.jino.tripbasketnew.room.policy.RoomAccessPolicy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -87,6 +90,52 @@ class BlockServiceTest {
         assertThat(response.addedAt()).isNotNull();
     }
 
+    @Test
+    void createBlock_throwsWhenPlaceTimezoneIsBlank() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place(null);
+        CreateBlockRequestDto request = new CreateBlockRequestDto(
+                BlockStatus.SCHEDULED,
+                "google-place-id",
+                "대영박물관 관람",
+                LocalDateTime.of(2026, 4, 5, 10, 0),
+                LocalDateTime.of(2026, 4, 5, 11, 30));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(placeService.getOrSyncPlace("google-place-id")).thenReturn(place);
+
+        assertThatThrownBy(() -> blockService.createBlock(room.getId(), request, member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
+    }
+
+    @Test
+    void createBlock_throwsWhenPlaceTimezoneIsInvalid() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place("Invalid/Timezone");
+        CreateBlockRequestDto request = new CreateBlockRequestDto(
+                BlockStatus.SCHEDULED,
+                "google-place-id",
+                "대영박물관 관람",
+                LocalDateTime.of(2026, 4, 5, 10, 0),
+                LocalDateTime.of(2026, 4, 5, 11, 30));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(placeService.getOrSyncPlace("google-place-id")).thenReturn(place);
+
+        assertThatThrownBy(() -> blockService.createBlock(room.getId(), request, member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
+    }
+
     private Room room() {
         return Room.builder()
                 .id(UUID.randomUUID())
@@ -105,6 +154,10 @@ class BlockServiceTest {
     }
 
     private Place place() {
+        return place("Europe/London");
+    }
+
+    private Place place(String timezoneId) {
         return Place.builder()
                 .googlePlaceId("google-place-id")
                 .placeName("대영박물관")
@@ -116,7 +169,7 @@ class BlockServiceTest {
                 .reviewCount(120345)
                 .priceLevel(0)
                 .photoUrl("https://example.com/photo")
-                .timezoneId("Europe/London")
+                .timezoneId(timezoneId)
                 .openingHours(List.of(
                         PlaceOpeningHour.of(0, LocalTime.of(10, 0), LocalTime.of(17, 0)),
                         PlaceOpeningHour.of(1, LocalTime.of(10, 0), LocalTime.of(20, 30))))
