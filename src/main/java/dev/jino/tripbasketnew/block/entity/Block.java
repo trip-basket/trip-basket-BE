@@ -1,7 +1,6 @@
 package dev.jino.tripbasketnew.block.entity;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
@@ -70,10 +69,10 @@ public class Block extends SoftDeletableEntity {
             OffsetDateTime endTime,
             OffsetDateTime addedAt) {
         Block block = new Block();
-        block.room = Objects.requireNonNull(room, "room must not be null");
-        block.place = Objects.requireNonNull(place, "place must not be null");
-        block.addedBy = Objects.requireNonNull(addedBy, "addedBy must not be null");
-        block.addedAt = Objects.requireNonNull(addedAt, "addedAt must not be null");
+        block.room = room;
+        block.place = place;
+        block.addedBy = addedBy;
+        block.addedAt = addedAt;
         block.rename(name);
         block.changeSchedule(status, startTime, endTime);
         return block;
