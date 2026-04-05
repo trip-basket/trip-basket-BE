@@ -70,7 +70,7 @@ class RoomServiceTest {
                 .nickname("owner")
                 .build();
         CreateRoomRequestDto request =
-                new CreateRoomRequestDto("런던 여행", LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 29));
+                new CreateRoomRequestDto("  런던 여행  ", LocalDate.of(2026, 3, 16), LocalDate.of(2026, 3, 29));
         RoomMember ownerMembership = RoomMember.owner(newUnsavedRoom("런던 여행"), owner);
         when(memberRepository.findById(OWNER_ID)).thenReturn(Optional.of(owner));
         when(roomRepository.save(any(Room.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -187,7 +187,7 @@ class RoomServiceTest {
         when(roomMemberRepository.findAllByRoom_IdOrderByCreatedAtAsc(roomId)).thenReturn(List.of(ownerMembership));
 
         RoomResponseDto response =
-                roomService.updateRoom(roomId, new UpdateRoomRequestDto("런던 여행 수정", null, null), OWNER_ID);
+                roomService.updateRoom(roomId, new UpdateRoomRequestDto("  런던 여행 수정  ", null, null), OWNER_ID);
 
         assertThat(response.name()).isEqualTo("런던 여행 수정");
         assertThat(response.tripStartDate()).isEqualTo(LocalDate.of(2026, 3, 16));

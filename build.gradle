@@ -79,6 +79,19 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
+tasks.register('placeClientLiveTest', Test) {
+    group = 'verification'
+    description = 'Runs the live Google Places/Timezone integration test using environment variables.'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    include '**/PlaceClientLiveIntegrationTest.class'
+    testLogging {
+        showStandardStreams = true
+        events 'passed', 'failed', 'skipped'
+    }
+}
+
 tasks.named('processResources') {
     from('docs') {
         include 'api-changelog.md'

@@ -60,6 +60,9 @@ public class Place extends SoftDeletableEntity {
     @Column(name = "photo_url")
     private String photoUrl;
 
+    @Column(name = "timezone_id", nullable = false)
+    private String timezoneId;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "place_opening_hours", joinColumns = @JoinColumn(name = "place_id"))
     @OrderColumn(name = "sort_order")
@@ -76,6 +79,7 @@ public class Place extends SoftDeletableEntity {
             Integer reviewCount,
             Integer priceLevel,
             String photoUrl,
+            String timezoneId,
             List<PlaceOpeningHour> openingHours) {
         this.placeName = placeName;
         this.lat = lat;
@@ -86,6 +90,7 @@ public class Place extends SoftDeletableEntity {
         this.reviewCount = reviewCount;
         this.priceLevel = priceLevel;
         this.photoUrl = photoUrl;
+        this.timezoneId = timezoneId;
         this.openingHours = openingHours == null ? new ArrayList<>() : new ArrayList<>(openingHours);
     }
 }

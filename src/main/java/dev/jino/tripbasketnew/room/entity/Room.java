@@ -39,10 +39,22 @@ public class Room extends SoftDeletableEntity {
     @Column(name = "invite_code_issued_at")
     private LocalDateTime inviteCodeIssuedAt;
 
+    public static Room create(String name, LocalDate tripStartDate, LocalDate tripEndDate) {
+        Room room = new Room();
+        room.rename(name);
+        room.tripStartDate = tripStartDate;
+        room.tripEndDate = tripEndDate;
+        return room;
+    }
+
     public void update(String name, LocalDate tripStartDate, LocalDate tripEndDate) {
-        this.name = name;
+        rename(name);
         this.tripStartDate = tripStartDate;
         this.tripEndDate = tripEndDate;
+    }
+
+    public void rename(String name) {
+        this.name = name.strip();
     }
 
     public void issueInviteCode(String inviteCode, LocalDateTime issuedAt) {
