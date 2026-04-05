@@ -2,11 +2,13 @@ package dev.jino.tripbasketnew.block.dto;
 
 import java.time.OffsetDateTime;
 
+import dev.jino.tripbasketnew.block.dto.validation.ValidCreateBlockRequest;
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@ValidCreateBlockRequest
 public record CreateBlockRequestDto(
         @Schema(
                 description = "블록 상태",
