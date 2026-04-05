@@ -22,6 +22,10 @@ public enum ErrorCode {
 
     // Block 관련
     BLOCK_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "status must not be null", "블록 상태는 필수입니다."),
+    BLOCK_STATUS_INVALID(
+            HttpStatus.BAD_REQUEST,
+            "status must be one of [bucket, scheduled]",
+            "지원하지 않는 블록 상태입니다. 허용값은 bucket, scheduled 입니다."),
     BLOCK_SCHEDULE_REQUIRED(
             HttpStatus.BAD_REQUEST,
             "scheduled block requires startTime and endTime",

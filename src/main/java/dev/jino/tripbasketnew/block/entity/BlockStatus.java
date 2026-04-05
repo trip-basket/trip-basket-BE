@@ -24,7 +24,7 @@ public enum BlockStatus {
     @JsonCreator
     public static BlockStatus from(String value) {
         if (value == null) {
-            throw new BusinessException(ErrorCode.BLOCK_STATUS_REQUIRED);
+            return null;
         }
 
         for (BlockStatus status : values()) {
@@ -33,6 +33,6 @@ public enum BlockStatus {
             }
         }
 
-        throw new BusinessException(ErrorCode.BLOCK_STATUS_REQUIRED);
+        throw new BusinessException(ErrorCode.BLOCK_STATUS_INVALID);
     }
 }

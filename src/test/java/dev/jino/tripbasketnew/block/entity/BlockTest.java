@@ -113,6 +113,19 @@ class BlockTest {
                 .isEqualTo(ErrorCode.BLOCK_INVALID_TIME_RANGE);
     }
 
+    @Test
+    void blockStatusFrom_returnsNullWhenValueIsNull() {
+        assertThat(BlockStatus.from(null)).isNull();
+    }
+
+    @Test
+    void blockStatusFrom_throwsInvalidWhenValueIsUnknown() {
+        assertThatThrownBy(() -> BlockStatus.from("draft"))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.BLOCK_STATUS_INVALID);
+    }
+
     private Room room() {
         return Room.builder()
                 .name("런던 여행")
