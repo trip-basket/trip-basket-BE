@@ -3,7 +3,6 @@ package dev.jino.tripbasketnew.block.dto.validation;
 import java.time.LocalDateTime;
 
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
-import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -16,11 +15,10 @@ public class CreateBlockRequestValidator
             return true;
         }
 
-        if (value.status() == BlockStatus.SCHEDULED) {
-            return validateScheduled(value.startTime(), value.endTime(), context);
-        }
-
-        return validateBucket(value.startTime(), value.endTime(), context);
+        return switch (value.status()) {
+            case SCHEDULED -> validateScheduled(value.startTime(), value.endTime(), context);
+            case BUCKET -> validateBucket(value.startTime(), value.endTime(), context);
+        };
     }
 
     private boolean validateScheduled(
