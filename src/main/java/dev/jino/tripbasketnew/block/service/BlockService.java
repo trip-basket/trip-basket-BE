@@ -45,7 +45,7 @@ public class BlockService {
                 place,
                 roomMember.getMember(),
                 request.status(),
-                request.name().trim(),
+                request.name(),
                 toUtc(request.startTime(), zoneId),
                 toUtc(request.endTime(), zoneId),
                 place.getTimezoneId(),

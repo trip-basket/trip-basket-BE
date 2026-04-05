@@ -43,11 +43,7 @@ public class RoomService {
                 .findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Room room = Room.builder()
-                .name(request.name().trim())
-                .tripStartDate(request.tripStartDate())
-                .tripEndDate(request.tripEndDate())
-                .build();
+        Room room = Room.create(request.name(), request.tripStartDate(), request.tripEndDate());
 
         Room savedRoom = roomRepository.save(room);
         roomMemberRepository.save(RoomMember.owner(savedRoom, member));
@@ -64,7 +60,7 @@ public class RoomService {
     public RoomResponseDto updateRoom(UUID roomId, UpdateRoomRequestDto request, UUID memberId) {
         Room room = roomAccessPolicy.validateOwnerAccess(roomId, memberId).getRoom();
 
-        String name = StringUtils.hasText(request.name()) ? request.name().trim() : room.getName();
+        String name = StringUtils.hasText(request.name()) ? request.name() : room.getName();
         LocalDate tripStartDate = request.tripStartDate() != null ? request.tripStartDate() : room.getTripStartDate();
         LocalDate tripEndDate = request.tripEndDate() != null ? request.tripEndDate() : room.getTripEndDate();
 

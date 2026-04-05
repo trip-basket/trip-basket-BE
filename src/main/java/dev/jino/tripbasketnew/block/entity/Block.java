@@ -87,7 +87,7 @@ public class Block extends SoftDeletableEntity {
         if (name == null || name.isBlank()) {
             throw new BusinessException(ErrorCode.BLOCK_NAME_BLANK);
         }
-        this.name = name;
+        this.name = name.strip();
     }
 
     public void changeSchedule(BlockStatus status, OffsetDateTime startTime, OffsetDateTime endTime) {
