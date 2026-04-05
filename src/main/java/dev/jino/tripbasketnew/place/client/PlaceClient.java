@@ -93,6 +93,10 @@ public class PlaceClient {
                     .retrieve()
                     .body(JsonNode.class);
 
+            if (response == null) {
+                throw new BusinessException(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
+            }
+
             String status = textOrNull(response, "status");
             String timeZoneId = textOrNull(response, "timeZoneId");
 

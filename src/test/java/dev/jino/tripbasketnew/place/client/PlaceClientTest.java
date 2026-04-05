@@ -133,6 +133,19 @@ class PlaceClientTest {
                 .isEqualTo(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
     }
 
+    @Test
+    void fetchTimeZoneId_throwsWhenResponseBodyIsEmpty() {
+        server.createContext("/timezone", exchange -> {
+            exchange.sendResponseHeaders(200, 0);
+            exchange.getResponseBody().close();
+        });
+
+        assertThatThrownBy(() -> placeClient.fetchTimeZoneId(51.5194, -0.1270))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
+    }
+
     private static void clearContexts() {
         removeContextIfExists("/places/google-place-id");
         removeContextIfExists("/places/missing-place");

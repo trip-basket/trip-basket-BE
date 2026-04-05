@@ -118,6 +118,11 @@ public class GlobalExceptionHandler {
     // 400: JSON 파싱 불가
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException e, HttpServletRequest req) {
+        Throwable cause = e.getCause();
+        if (cause instanceof BusinessException businessException) {
+            return handleBusinessException(businessException, req);
+        }
+
         logSystemClientError(HttpStatus.BAD_REQUEST, e, req);
 
         return ErrorResponses.of(HttpStatus.BAD_REQUEST, "요청 본문을 해석할 수 없습니다.", instance(req));
