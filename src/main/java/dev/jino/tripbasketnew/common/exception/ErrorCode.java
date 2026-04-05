@@ -20,6 +20,19 @@ public enum ErrorCode {
     ROOM_ALREADY_JOINED(HttpStatus.CONFLICT, "Room member already exists", "이미 참여 중인 방입니다."),
     ROOM_OWNER_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "Room owner cannot leave", "방장은 나갈 수 없습니다. 방 삭제를 이용해주세요."),
 
+    // Block 관련
+    BLOCK_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "status must not be null", "블록 상태는 필수입니다."),
+    BLOCK_NAME_BLANK(HttpStatus.BAD_REQUEST, "name must not be blank", "블록 이름은 비어 있을 수 없습니다."),
+    BLOCK_SCHEDULE_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "scheduled block requires startTime and endTime",
+            "scheduled 상태에서는 시작 시간과 종료 시간이 필요합니다."),
+    BLOCK_SCHEDULE_NOT_ALLOWED(
+            HttpStatus.BAD_REQUEST,
+            "bucket block must not include startTime and endTime",
+            "bucket 상태에서는 시작 시간과 종료 시간을 보낼 수 없습니다."),
+    BLOCK_INVALID_TIME_RANGE(HttpStatus.BAD_REQUEST, "endTime must be after startTime", "종료 시간은 시작 시간보다 뒤여야 합니다."),
+
     // Place 관련
     PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다."),
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "Place not found", "해당 장소를 찾을 수 없습니다."),
