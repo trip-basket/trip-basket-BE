@@ -7,8 +7,6 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import dev.jino.tripbasketnew.common.entity.SoftDeletableEntity;
-import dev.jino.tripbasketnew.common.exception.BusinessException;
-import dev.jino.tripbasketnew.common.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -56,9 +54,6 @@ public class Room extends SoftDeletableEntity {
     }
 
     public void rename(String name) {
-        if (name == null || name.isBlank()) {
-            throw new BusinessException(ErrorCode.ROOM_NAME_BLANK);
-        }
         this.name = name.strip();
     }
 

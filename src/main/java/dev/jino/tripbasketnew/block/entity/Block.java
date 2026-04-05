@@ -84,9 +84,6 @@ public class Block extends SoftDeletableEntity {
     }
 
     public void rename(String name) {
-        if (name == null || name.isBlank()) {
-            throw new BusinessException(ErrorCode.BLOCK_NAME_BLANK);
-        }
         this.name = name.strip();
     }
 

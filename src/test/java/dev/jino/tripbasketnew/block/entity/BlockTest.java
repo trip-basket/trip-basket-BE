@@ -113,23 +113,6 @@ class BlockTest {
                 .isEqualTo(ErrorCode.BLOCK_INVALID_TIME_RANGE);
     }
 
-    @Test
-    void createBlock_throwsWhenNameIsBlank() {
-        assertThatThrownBy(() -> Block.create(
-                        room(),
-                        place(),
-                        member(),
-                        BlockStatus.BUCKET,
-                        " ",
-                        null,
-                        null,
-                        "Europe/London",
-                        OffsetDateTime.now(ZoneOffset.UTC)))
-                .isInstanceOf(BusinessException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.BLOCK_NAME_BLANK);
-    }
-
     private Room room() {
         return Room.builder()
                 .name("런던 여행")
