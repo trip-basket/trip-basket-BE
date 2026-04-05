@@ -3,6 +3,7 @@ package dev.jino.tripbasketnew.place.service;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -32,8 +33,13 @@ public class PlaceService {
 
     public Place getOrSyncPlace(String googlePlaceId) {
         ParsedPlaceDetail detail = fetchAndParse(googlePlaceId);
-        return placeRepository
-                .findByGooglePlaceId(detail.googlePlaceId())
+        Optional<Place> existingPlace = placeRepository.findByGooglePlaceId(detail.googlePlaceId());
+        String timezoneId = existingPlace
+                .map(Place::getTimezoneId)
+                .filter(StringUtils::hasText)
+                .orElseGet(() -> placeClient.fetchTimeZoneId(detail.lat(), detail.lng()));
+
+        return existingPlace
                 .map(place -> {
                     place.updateDetails(
                             detail.placeName(),
@@ -45,6 +51,7 @@ public class PlaceService {
                             detail.reviewCount(),
                             detail.priceLevel(),
                             detail.photoUrl(),
+                            timezoneId,
                             detail.openingHours());
                     return place;
                 })
@@ -59,6 +66,7 @@ public class PlaceService {
                         .reviewCount(detail.reviewCount())
                         .priceLevel(detail.priceLevel())
                         .photoUrl(detail.photoUrl())
+                        .timezoneId(timezoneId)
                         .openingHours(detail.openingHours())
                         .build()));
     }

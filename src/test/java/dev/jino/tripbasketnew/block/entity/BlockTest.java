@@ -23,13 +23,22 @@ class BlockTest {
         OffsetDateTime endTime = OffsetDateTime.of(2026, 4, 5, 11, 30, 0, 0, ZoneOffset.ofHours(9));
         OffsetDateTime addedAt = OffsetDateTime.of(2026, 4, 5, 9, 30, 0, 0, ZoneOffset.UTC);
 
-        Block block =
-                Block.create(room(), place(), member(), BlockStatus.SCHEDULED, "대영박물관 관람", startTime, endTime, addedAt);
+        Block block = Block.create(
+                room(),
+                place(),
+                member(),
+                BlockStatus.SCHEDULED,
+                "대영박물관 관람",
+                startTime,
+                endTime,
+                "Europe/London",
+                addedAt);
 
         assertThat(block.getStatus()).isEqualTo(BlockStatus.SCHEDULED);
         assertThat(block.getName()).isEqualTo("대영박물관 관람");
         assertThat(block.getStartTime()).isEqualTo(startTime);
         assertThat(block.getEndTime()).isEqualTo(endTime);
+        assertThat(block.getTimezoneId()).isEqualTo("Europe/London");
         assertThat(block.getAddedAt()).isEqualTo(addedAt);
     }
 
@@ -43,6 +52,7 @@ class BlockTest {
                 "대영박물관 관람",
                 null,
                 null,
+                "Europe/London",
                 OffsetDateTime.now(ZoneOffset.UTC));
 
         assertThat(block.getStatus()).isEqualTo(BlockStatus.BUCKET);
@@ -60,6 +70,7 @@ class BlockTest {
                         "대영박물관 관람",
                         OffsetDateTime.now(ZoneOffset.UTC),
                         null,
+                        "Europe/London",
                         OffsetDateTime.now(ZoneOffset.UTC)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
@@ -76,6 +87,7 @@ class BlockTest {
                         "대영박물관 관람",
                         OffsetDateTime.now(ZoneOffset.UTC),
                         OffsetDateTime.now(ZoneOffset.UTC).plusHours(1),
+                        "Europe/London",
                         OffsetDateTime.now(ZoneOffset.UTC)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
@@ -94,6 +106,7 @@ class BlockTest {
                         "대영박물관 관람",
                         startTime,
                         startTime,
+                        "Europe/London",
                         OffsetDateTime.now(ZoneOffset.UTC)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
@@ -110,6 +123,7 @@ class BlockTest {
                         " ",
                         null,
                         null,
+                        "Europe/London",
                         OffsetDateTime.now(ZoneOffset.UTC)))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
@@ -128,6 +142,7 @@ class BlockTest {
         return Place.builder()
                 .googlePlaceId("google-place-id")
                 .placeName("대영박물관")
+                .timezoneId("Europe/London")
                 .build();
     }
 

@@ -56,6 +56,9 @@ public class Block extends SoftDeletableEntity {
     @Column(name = "end_time")
     private OffsetDateTime endTime;
 
+    @Column(name = "timezone_id", nullable = false)
+    private String timezoneId;
+
     @Column(name = "added_at", nullable = false)
     private OffsetDateTime addedAt;
 
@@ -67,11 +70,13 @@ public class Block extends SoftDeletableEntity {
             String name,
             OffsetDateTime startTime,
             OffsetDateTime endTime,
+            String timezoneId,
             OffsetDateTime addedAt) {
         Block block = new Block();
         block.room = room;
         block.place = place;
         block.addedBy = addedBy;
+        block.timezoneId = timezoneId;
         block.addedAt = addedAt;
         block.rename(name);
         block.changeSchedule(status, startTime, endTime);

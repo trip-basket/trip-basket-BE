@@ -37,6 +37,8 @@ google:
       field-mask: "id,displayName,formattedAddress,location,regularOpeningHours,priceLevel,photos,primaryType,types"
       language-code: ko
       photo-max-height-px: 800
+    timezone:
+      base-url: https://maps.googleapis.com/maps/api/timezone/json
 
 app:
   jwt:

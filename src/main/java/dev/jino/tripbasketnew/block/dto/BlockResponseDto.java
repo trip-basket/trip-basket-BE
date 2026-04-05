@@ -1,6 +1,7 @@
 package dev.jino.tripbasketnew.block.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -26,11 +27,14 @@ public record BlockResponseDto(
         @Schema(description = "사용자가 지정한 블록 표시명", example = "대영박물관 관람")
         String name,
 
-        @Schema(description = "블록 시작 시각", example = "2024-03-16T10:00:00+09:00")
-        OffsetDateTime startTime,
+        @Schema(description = "블록 시작 시각. timezoneId 기준 로컬 시간입니다.", example = "2024-03-16T10:00:00")
+        LocalDateTime startTime,
 
-        @Schema(description = "블록 종료 시각", example = "2024-03-16T11:30:00+09:00")
-        OffsetDateTime endTime,
+        @Schema(description = "블록 종료 시각. timezoneId 기준 로컬 시간입니다.", example = "2024-03-16T11:30:00")
+        LocalDateTime endTime,
+
+        @Schema(description = "블록 시간대 ID", example = "Europe/London")
+        String timezoneId,
 
         @Schema(description = "예상 또는 기록 비용. 아직 미구현 단계에서는 null일 수 있습니다.", nullable = true, example = "12.50")
         BigDecimal cost,

@@ -37,6 +37,8 @@ public enum ErrorCode {
     PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다."),
     PLACE_NOT_FOUND(HttpStatus.NOT_FOUND, "Place not found", "해당 장소를 찾을 수 없습니다."),
     PLACE_INVALID_ID(HttpStatus.BAD_REQUEST, "Invalid placeId", "유효하지 않은 장소 ID입니다."),
+    PLACE_TIMEZONE_UNAVAILABLE(
+            HttpStatus.BAD_GATEWAY, "Failed to resolve timezone for place", "장소의 시간대 정보를 확인할 수 없습니다."),
     PLACE_PROVIDER_ERROR(
             HttpStatus.BAD_GATEWAY, "Failed to fetch place detail from Google", "장소 정보를 불러오는 중 오류가 발생했습니다."),
     PLACE_PROVIDER_NOT_CONFIGURED(

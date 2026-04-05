@@ -69,6 +69,7 @@ class PlaceServiceTest {
                 .build();
         when(placeClient.fetchPlaceDetail("google-place-id")).thenReturn(sampleDetail());
         when(placeClient.buildPhotoMediaUrl("photos/abc")).thenReturn("https://example.com/photo");
+        when(placeClient.fetchTimeZoneId(51.5194, -0.1270)).thenReturn("Europe/London");
         when(placeRepository.findByGooglePlaceId("google-place-id")).thenReturn(Optional.of(existing));
 
         Place synced = placeService.getOrSyncPlace("google-place-id");
@@ -77,6 +78,7 @@ class PlaceServiceTest {
         assertThat(synced.getFormattedAddress()).isEqualTo("Great Russell St, London WC1B 3DG");
         assertThat(synced.getRating()).isEqualTo(4.7);
         assertThat(synced.getReviewCount()).isEqualTo(120345);
+        assertThat(synced.getTimezoneId()).isEqualTo("Europe/London");
         assertThat(synced.getOpeningHours()).extracting("day").containsExactly(0, 1);
     }
 
@@ -84,6 +86,7 @@ class PlaceServiceTest {
     void getOrSyncPlace_savesNewPlaceWhenNotExists() throws Exception {
         when(placeClient.fetchPlaceDetail("google-place-id")).thenReturn(sampleDetail());
         when(placeClient.buildPhotoMediaUrl("photos/abc")).thenReturn("https://example.com/photo");
+        when(placeClient.fetchTimeZoneId(51.5194, -0.1270)).thenReturn("Europe/London");
         when(placeRepository.findByGooglePlaceId("google-place-id")).thenReturn(Optional.empty());
         when(placeRepository.save(any(Place.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -93,6 +96,7 @@ class PlaceServiceTest {
         assertThat(saved.getPlaceName()).isEqualTo("대영박물관");
         assertThat(saved.getPriceLevel()).isEqualTo(0);
         assertThat(saved.getPhotoUrl()).isEqualTo("https://example.com/photo");
+        assertThat(saved.getTimezoneId()).isEqualTo("Europe/London");
         assertThat(saved.getOpeningHours()).hasSize(2);
         assertThat(saved.getOpeningHours().get(0).getOpenAt()).isEqualTo(LocalTime.of(10, 0));
     }

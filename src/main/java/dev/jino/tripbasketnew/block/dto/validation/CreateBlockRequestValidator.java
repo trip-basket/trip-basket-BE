@@ -1,6 +1,6 @@
 package dev.jino.tripbasketnew.block.dto.validation;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
@@ -24,7 +24,7 @@ public class CreateBlockRequestValidator
     }
 
     private boolean validateScheduled(
-            OffsetDateTime startTime, OffsetDateTime endTime, ConstraintValidatorContext context) {
+            LocalDateTime startTime, LocalDateTime endTime, ConstraintValidatorContext context) {
         boolean valid = true;
         context.disableDefaultConstraintViolation();
 
@@ -50,8 +50,7 @@ public class CreateBlockRequestValidator
         return true;
     }
 
-    private boolean validateBucket(
-            OffsetDateTime startTime, OffsetDateTime endTime, ConstraintValidatorContext context) {
+    private boolean validateBucket(LocalDateTime startTime, LocalDateTime endTime, ConstraintValidatorContext context) {
         boolean valid = true;
         context.disableDefaultConstraintViolation();
 

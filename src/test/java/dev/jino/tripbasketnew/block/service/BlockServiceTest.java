@@ -1,9 +1,8 @@
 package dev.jino.tripbasketnew.block.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,8 +58,8 @@ class BlockServiceTest {
                 BlockStatus.SCHEDULED,
                 "google-place-id",
                 "대영박물관 관람",
-                OffsetDateTime.of(2026, 4, 5, 10, 0, 0, 0, ZoneOffset.ofHours(9)),
-                OffsetDateTime.of(2026, 4, 5, 11, 30, 0, 0, ZoneOffset.ofHours(9)));
+                LocalDateTime.of(2026, 4, 5, 10, 0),
+                LocalDateTime.of(2026, 4, 5, 11, 30));
 
         when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
                 .thenReturn(roomMember);
@@ -72,6 +71,9 @@ class BlockServiceTest {
         assertThat(response.roomId()).isEqualTo(room.getId());
         assertThat(response.status()).isEqualTo(BlockStatus.SCHEDULED);
         assertThat(response.name()).isEqualTo("대영박물관 관람");
+        assertThat(response.startTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 10, 0));
+        assertThat(response.endTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 11, 30));
+        assertThat(response.timezoneId()).isEqualTo("Europe/London");
         assertThat(response.place().googlePlaceId()).isEqualTo("google-place-id");
         assertThat(response.place().placeName()).isEqualTo("대영박물관");
         assertThat(response.place().openingHours()).hasSize(2);
@@ -112,6 +114,7 @@ class BlockServiceTest {
                 .reviewCount(120345)
                 .priceLevel(0)
                 .photoUrl("https://example.com/photo")
+                .timezoneId("Europe/London")
                 .openingHours(List.of(
                         PlaceOpeningHour.of(0, LocalTime.of(10, 0), LocalTime.of(17, 0)),
                         PlaceOpeningHour.of(1, LocalTime.of(10, 0), LocalTime.of(20, 30))))

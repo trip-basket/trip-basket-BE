@@ -1,7 +1,9 @@
 package dev.jino.tripbasketnew.block.service;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
@@ -36,6 +38,7 @@ public class BlockService {
     public BlockResponseDto createBlock(UUID roomId, CreateBlockRequestDto request, UUID memberId) {
         RoomMember roomMember = roomAccessPolicy.validateParticipantAccess(roomId, memberId);
         Place place = placeService.getOrSyncPlace(request.googlePlaceId());
+        ZoneId zoneId = ZoneId.of(place.getTimezoneId());
 
         Block block = Block.create(
                 roomMember.getRoom(),
@@ -43,8 +46,9 @@ public class BlockService {
                 roomMember.getMember(),
                 request.status(),
                 request.name().trim(),
-                request.startTime(),
-                request.endTime(),
+                toUtc(request.startTime(), zoneId),
+                toUtc(request.endTime(), zoneId),
+                place.getTimezoneId(),
                 OffsetDateTime.now(ZoneOffset.UTC));
 
         return toResponse(blockRepository.save(block));
@@ -57,8 +61,9 @@ public class BlockService {
                 block.getStatus(),
                 toPlaceResponse(block.getPlace()),
                 block.getName(),
-                block.getStartTime(),
-                block.getEndTime(),
+                toLocalTime(block.getStartTime(), block.getTimezoneId()),
+                toLocalTime(block.getEndTime(), block.getTimezoneId()),
+                block.getTimezoneId(),
                 null,
                 null,
                 block.getAddedBy().getId(),
@@ -96,5 +101,19 @@ public class BlockService {
             return null;
         }
         return String.format("%02d:%02d", time.getHour(), time.getMinute());
+    }
+
+    private OffsetDateTime toUtc(LocalDateTime localDateTime, ZoneId zoneId) {
+        if (localDateTime == null) {
+            return null;
+        }
+        return localDateTime.atZone(zoneId).withZoneSameInstant(ZoneOffset.UTC).toOffsetDateTime();
+    }
+
+    private LocalDateTime toLocalTime(OffsetDateTime utcDateTime, String timezoneId) {
+        if (utcDateTime == null) {
+            return null;
+        }
+        return utcDateTime.atZoneSameInstant(ZoneId.of(timezoneId)).toLocalDateTime();
     }
 }

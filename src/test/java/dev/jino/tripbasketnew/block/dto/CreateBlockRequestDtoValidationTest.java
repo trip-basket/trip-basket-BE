@@ -1,7 +1,6 @@
 package dev.jino.tripbasketnew.block.dto;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -41,8 +40,8 @@ class CreateBlockRequestDtoValidationTest {
                 BlockStatus.BUCKET,
                 "google-place-id",
                 "대영박물관 관람",
-                OffsetDateTime.now(ZoneOffset.UTC),
-                OffsetDateTime.now(ZoneOffset.UTC).plusHours(1));
+                LocalDateTime.of(2026, 4, 5, 10, 0),
+                LocalDateTime.of(2026, 4, 5, 11, 0));
 
         Set<ConstraintViolation<CreateBlockRequestDto>> violations = validator.validate(request);
 
@@ -53,7 +52,7 @@ class CreateBlockRequestDtoValidationTest {
 
     @Test
     void scheduledStatus_requiresEndTimeAfterStartTime() {
-        OffsetDateTime startTime = OffsetDateTime.of(2026, 4, 5, 10, 0, 0, 0, ZoneOffset.ofHours(9));
+        LocalDateTime startTime = LocalDateTime.of(2026, 4, 5, 10, 0);
         CreateBlockRequestDto request =
                 new CreateBlockRequestDto(BlockStatus.SCHEDULED, "google-place-id", "대영박물관 관람", startTime, startTime);
 

@@ -1,6 +1,6 @@
 package dev.jino.tripbasketnew.block.dto;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 import dev.jino.tripbasketnew.block.dto.validation.ValidCreateBlockRequest;
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
@@ -24,12 +24,8 @@ public record CreateBlockRequestDto(
         @Schema(description = "사용자가 지정한 블록 표시명", example = "대영박물관 관람") @NotBlank(message = "name은 비어 있을 수 없습니다.")
         String name,
 
-        @Schema(
-                description = "블록 시작 시각. status가 scheduled일 때 필수이며 타임존을 포함해야 합니다.",
-                example = "2024-03-16T10:00:00+09:00")
-        OffsetDateTime startTime,
+        @Schema(description = "블록 시작 시각. status가 scheduled일 때 필수이며 장소 현지 기준 로컬 시간입니다.", example = "2024-03-16T10:00:00")
+        LocalDateTime startTime,
 
-        @Schema(
-                description = "블록 종료 시각. status가 scheduled일 때 필수이며 타임존을 포함해야 합니다.",
-                example = "2024-03-16T11:30:00+09:00")
-        OffsetDateTime endTime) {}
+        @Schema(description = "블록 종료 시각. status가 scheduled일 때 필수이며 장소 현지 기준 로컬 시간입니다.", example = "2024-03-16T11:30:00")
+        LocalDateTime endTime) {}
