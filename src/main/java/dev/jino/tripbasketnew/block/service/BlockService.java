@@ -64,6 +64,8 @@ public class BlockService {
                 toLocalTime(block.getStartTime(), block.getTimezoneId()),
                 toLocalTime(block.getEndTime(), block.getTimezoneId()),
                 block.getTimezoneId(),
+                toOffsetMinutes(block.getStartTime(), block.getTimezoneId()),
+                toOffsetMinutes(block.getEndTime(), block.getTimezoneId()),
                 null,
                 null,
                 block.getAddedBy().getId(),
@@ -115,5 +117,12 @@ public class BlockService {
             return null;
         }
         return utcDateTime.atZoneSameInstant(ZoneId.of(timezoneId)).toLocalDateTime();
+    }
+
+    private Integer toOffsetMinutes(OffsetDateTime utcDateTime, String timezoneId) {
+        if (utcDateTime == null) {
+            return null;
+        }
+        return utcDateTime.atZoneSameInstant(ZoneId.of(timezoneId)).getOffset().getTotalSeconds() / 60;
     }
 }

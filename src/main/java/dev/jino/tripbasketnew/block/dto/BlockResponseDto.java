@@ -36,6 +36,18 @@ public record BlockResponseDto(
         @Schema(description = "블록 시간대 ID", example = "Europe/London")
         String timezoneId,
 
+        @Schema(
+                description = "시작 시각 기준 UTC 오프셋(분). DST에 따라 endUtcOffsetMinutes와 다를 수 있습니다.",
+                nullable = true,
+                example = "60")
+        Integer startUtcOffsetMinutes,
+
+        @Schema(
+                description = "종료 시각 기준 UTC 오프셋(분). DST에 따라 startUtcOffsetMinutes와 다를 수 있습니다.",
+                nullable = true,
+                example = "60")
+        Integer endUtcOffsetMinutes,
+
         @Schema(description = "예상 또는 기록 비용. 아직 미구현 단계에서는 null일 수 있습니다.", nullable = true, example = "12.50")
         BigDecimal cost,
 

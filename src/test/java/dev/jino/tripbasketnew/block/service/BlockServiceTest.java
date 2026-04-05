@@ -74,6 +74,8 @@ class BlockServiceTest {
         assertThat(response.startTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 10, 0));
         assertThat(response.endTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 11, 30));
         assertThat(response.timezoneId()).isEqualTo("Europe/London");
+        assertThat(response.startUtcOffsetMinutes()).isEqualTo(60);
+        assertThat(response.endUtcOffsetMinutes()).isEqualTo(60);
         assertThat(response.place().googlePlaceId()).isEqualTo("google-place-id");
         assertThat(response.place().placeName()).isEqualTo("대영박물관");
         assertThat(response.place().openingHours()).hasSize(2);
