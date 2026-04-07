@@ -10,9 +10,7 @@ public record BlockPlaceResponseDto(
 
         @Schema(description = "장소 원본 이름", example = "대영박물관") String placeName,
 
-        @Schema(description = "위도", example = "51.5194") Double lat,
-
-        @Schema(description = "경도", example = "-0.1270") Double lng,
+        @Schema(description = "좌표 정보") Position position,
 
         @Schema(description = "카테고리", example = "attraction")
         String category,
@@ -30,6 +28,10 @@ public record BlockPlaceResponseDto(
 
         @Schema(description = "대표 사진 URL", example = "https://places.googleapis.com/v1/...")
         String photoUrl) {
+
+    public record Position(
+            @Schema(description = "위도", example = "51.5194") Double lat,
+            @Schema(description = "경도", example = "-0.1270") Double lng) {}
 
     public record OpeningHour(
             @Schema(description = "요일(0=일요일, 1=월요일 ...)", example = "0")

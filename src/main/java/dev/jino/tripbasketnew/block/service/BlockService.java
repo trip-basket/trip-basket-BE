@@ -94,8 +94,7 @@ public class BlockService {
         return new BlockPlaceResponseDto(
                 place.getGooglePlaceId(),
                 place.getPlaceName(),
-                place.getLat(),
-                place.getLng(),
+                new BlockPlaceResponseDto.Position(place.getLat(), place.getLng()),
                 place.getCategory(),
                 place.getFormattedAddress(),
                 place.getRating(),
