@@ -77,6 +77,7 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    exclude '**/PlaceClientLiveIntegrationTest.class'
 }
 
 tasks.register('placeClientLiveTest', Test) {
