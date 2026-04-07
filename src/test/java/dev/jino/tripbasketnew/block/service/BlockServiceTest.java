@@ -81,6 +81,8 @@ class BlockServiceTest {
         assertThat(response.endUtcOffsetMinutes()).isEqualTo(60);
         assertThat(response.place().googlePlaceId()).isEqualTo("google-place-id");
         assertThat(response.place().placeName()).isEqualTo("대영박물관");
+        assertThat(response.place().position().lat()).isEqualTo(51.5194);
+        assertThat(response.place().position().lng()).isEqualTo(-0.1270);
         assertThat(response.place().openingHours()).hasSize(2);
         assertThat(response.cost()).isNull();
         assertThat(response.memo()).isNull();

@@ -14,27 +14,40 @@ public record PlaceDetailResponseDto(
         String formattedAddress,
 
         @Schema(description = "좌표 정보") Position position,
-        @Schema(description = "영업 시간 목록") List<OpeningHour> openingHours,
-        @Schema(description = "가격 레벨(0~4)", example = "2") Integer priceLevel,
-        @Schema(description = "평점", example = "4.7") Double rating,
-        @Schema(description = "리뷰 수", example = "120345") Integer reviewCount,
 
-        @Schema(description = "대표 사진 URL", example = "https://places.googleapis.com/v1/...")
+        @Schema(description = "영업 시간 목록. 정보가 없으면 빈 배열로 반환됩니다.")
+        List<OpeningHour> openingHours,
+
+        @Schema(description = "가격 레벨(0~4). 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "2")
+        Integer priceLevel,
+
+        @Schema(description = "평점. 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "4.7")
+        Double rating,
+
+        @Schema(description = "리뷰 수. 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "120345")
+        Integer reviewCount,
+
+        @Schema(
+                description = "대표 사진 URL. 사진 정보가 없으면 null일 수 있습니다.",
+                nullable = true,
+                example = "https://places.googleapis.com/v1/...")
         String photoUrl,
 
-        @Schema(description = "카테고리", example = "museum") String category) {
+        @Schema(description = "카테고리. 분류 정보가 없으면 null일 수 있습니다.", nullable = true, example = "museum")
+        String category) {
 
     public record Position(
             @Schema(description = "위도", example = "51.5194") Double lat,
+
             @Schema(description = "경도", example = "-0.1270") Double lng) {}
 
     public record OpeningHour(
-            @Schema(description = "요일(0=일요일, 1=월요일 ...)", example = "0")
+            @Schema(description = "요일(0=일요일, 1=월요일 ...). 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "0")
             Integer day,
 
-            @Schema(description = "오픈 시간(HH:mm)", example = "10:00")
+            @Schema(description = "오픈 시간(HH:mm). 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "10:00")
             String open,
 
-            @Schema(description = "마감 시간(HH:mm)", example = "17:00")
+            @Schema(description = "마감 시간(HH:mm). 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "17:00")
             String close) {}
 }
