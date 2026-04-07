@@ -12,21 +12,28 @@ public record BlockPlaceResponseDto(
 
         @Schema(description = "좌표 정보") Position position,
 
-        @Schema(description = "카테고리", example = "attraction")
+        @Schema(description = "카테고리. 분류 정보가 없으면 null일 수 있습니다.", nullable = true, example = "attraction")
         String category,
 
         @Schema(description = "포맷팅된 주소", example = "Great Russell St, London WC1B 3DG")
         String formattedAddress,
 
-        @Schema(description = "평점", example = "4.7") Double rating,
+        @Schema(description = "평점. 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "4.7")
+        Double rating,
 
-        @Schema(description = "리뷰 수", example = "120345") Integer reviewCount,
+        @Schema(description = "리뷰 수. 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "120345")
+        Integer reviewCount,
 
-        @Schema(description = "영업 시간 목록") List<OpeningHour> openingHours,
+        @Schema(description = "영업 시간 목록. 정보가 없으면 빈 배열로 반환됩니다.")
+        List<OpeningHour> openingHours,
 
-        @Schema(description = "가격 레벨(0~4)", example = "0") Integer priceLevel,
+        @Schema(description = "가격 레벨(0~4). 제공되지 않으면 null일 수 있습니다.", nullable = true, example = "0")
+        Integer priceLevel,
 
-        @Schema(description = "대표 사진 URL", example = "https://places.googleapis.com/v1/...")
+        @Schema(
+                description = "대표 사진 URL. 사진 정보가 없으면 null일 수 있습니다.",
+                nullable = true,
+                example = "https://places.googleapis.com/v1/...")
         String photoUrl) {
 
     public record Position(
