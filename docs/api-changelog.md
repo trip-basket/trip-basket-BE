@@ -4,6 +4,21 @@ API 및 서비스 변경 사항을 빠르게 확인할 수 있도록 관리하�
 - API 계약에 영향을 주는 변경이 생기면 이 문서와 Swagger를 함께 확인해주세요.
 - 각 변경 항목에는 `프론트 영향: 낮음 | 보통 | 높음` 형식으로 영향도를 함께 적습니다.
 
+## 2026-04-07
+
+### 1. Block 생성 응답의 장소 좌표 구조 정리
+
+##### 프론트 영향: `보통`
+- `POST /api/rooms/{roomId}/blocks` 응답의 `place` 객체에서 좌표 필드를 `lat`, `lng` 평면 구조 대신 `position { lat, lng }` 구조로 변경했습니다.
+- 이제 장소 상세 조회 응답과 동일한 좌표 표현을 사용합니다.
+
+### 2. Place 관련 Swagger null 가능성 설명 보강
+
+#### 프론트 영향: `낮음`
+- `GET /api/places/{placeId}` 및 Block 생성 응답의 장소 정보 Swagger 설명을 보강했습니다.
+- `priceLevel`, `rating`, `reviewCount`, `photoUrl`, `category`는 제공되지 않으면 `null`일 수 있음을 명시했습니다.
+- `openingHours`는 `null`이 아니라, 정보가 없을 때 빈 배열(`[]`)로 반환된다는 점을 명시했습니다.
+
 ## 2026-04-05
 
 ### 1. Block 생성 API 추가
