@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -68,6 +70,27 @@ public interface BlockApi {
     ResponseEntity<BlockResponseDto> getBlock(
             @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
             @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 수정", description = "방 참여자가 블록 이름, 상태, 시간을 수정합니다.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "수정 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = BlockResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방 또는 블록을 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/{blockId}")
+    ResponseEntity<BlockResponseDto> updateBlock(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @Valid @RequestBody UpdateBlockRequestDto request,
             @AuthenticationPrincipal UserPrincipal userPrincipal);
 
     @Operation(summary = "블록 생성", description = "방 참여자가 bucket 또는 scheduled 상태의 블록을 생성합니다.")

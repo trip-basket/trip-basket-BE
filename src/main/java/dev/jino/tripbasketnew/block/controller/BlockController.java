@@ -10,6 +10,7 @@ import dev.jino.tripbasketnew.block.controller.api.BlockApi;
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.service.BlockService;
 import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,13 @@ public class BlockController implements BlockApi {
     @Override
     public ResponseEntity<BlockResponseDto> getBlock(UUID roomId, UUID blockId, UserPrincipal userPrincipal) {
         BlockResponseDto response = blockService.getBlock(roomId, blockId, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<BlockResponseDto> updateBlock(
+            UUID roomId, UUID blockId, UpdateBlockRequestDto request, UserPrincipal userPrincipal) {
+        BlockResponseDto response = blockService.updateBlock(roomId, blockId, request, userPrincipal.getMemberId());
         return ResponseEntity.ok(response);
     }
 

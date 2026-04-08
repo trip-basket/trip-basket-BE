@@ -22,6 +22,7 @@ import dev.jino.tripbasketnew.block.dto.BlockReactionResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import dev.jino.tripbasketnew.block.repository.BlockRepository;
@@ -46,9 +47,7 @@ public class BlockService {
     public BlockResponseDto getBlock(UUID roomId, UUID blockId, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
 
-        Block block = blockRepository
-                .findByIdAndRoom_Id(blockId, roomId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BLOCK_NOT_FOUND));
+        Block block = findBlock(roomId, blockId);
 
         return toResponse(block);
     }
@@ -87,6 +86,39 @@ public class BlockService {
                 OffsetDateTime.now(ZoneOffset.UTC));
 
         return toResponse(blockRepository.save(block));
+    }
+
+    @Transactional
+    public BlockResponseDto updateBlock(UUID roomId, UUID blockId, UpdateBlockRequestDto request, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+        Block block = findBlock(roomId, blockId);
+
+        if (request.name() != null) {
+            block.rename(request.name());
+        }
+
+        BlockStatus targetStatus = request.status() != null ? request.status() : block.getStatus();
+        ZoneId zoneId = resolveZoneId(block.getTimezoneId());
+
+        if (targetStatus == BlockStatus.BUCKET) {
+            if (request.startTime() != null || request.endTime() != null) {
+                throw new BusinessException(ErrorCode.BLOCK_SCHEDULE_NOT_ALLOWED);
+            }
+            block.changeSchedule(BlockStatus.BUCKET, null, null);
+            return toResponse(block);
+        }
+
+        OffsetDateTime targetStart =
+                request.startTime() != null ? toUtc(request.startTime(), zoneId) : block.getStartTime();
+        OffsetDateTime targetEnd = request.endTime() != null ? toUtc(request.endTime(), zoneId) : block.getEndTime();
+        block.changeSchedule(BlockStatus.SCHEDULED, targetStart, targetEnd);
+        return toResponse(block);
+    }
+
+    private Block findBlock(UUID roomId, UUID blockId) {
+        return blockRepository
+                .findByIdAndRoom_Id(blockId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOCK_NOT_FOUND));
     }
 
     private BlockResponseDto toResponse(Block block) {

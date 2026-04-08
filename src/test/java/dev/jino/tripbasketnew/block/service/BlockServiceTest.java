@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import dev.jino.tripbasketnew.block.repository.BlockRepository;
@@ -278,6 +279,119 @@ class BlockServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.BLOCK_NOT_FOUND);
+    }
+
+    @Test
+    void updateBlock_renamesWithoutChangingSchedule() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.SCHEDULED,
+                "기존 이름",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(null, "  새 이름  ", null, null);
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.updateBlock(room.getId(), block.getId(), request, member.getId());
+
+        assertThat(response.name()).isEqualTo("새 이름");
+        assertThat(response.status()).isEqualTo(BlockStatus.SCHEDULED);
+        assertThat(response.startTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 2, 0));
+        assertThat(response.endTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 3, 0));
+    }
+
+    @Test
+    void updateBlock_convertsBucketToScheduled() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.BUCKET,
+                "후보",
+                null,
+                null,
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(
+                BlockStatus.SCHEDULED, null, LocalDateTime.of(2026, 4, 5, 10, 0), LocalDateTime.of(2026, 4, 5, 11, 30));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.updateBlock(room.getId(), block.getId(), request, member.getId());
+
+        assertThat(response.status()).isEqualTo(BlockStatus.SCHEDULED);
+        assertThat(response.startTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 10, 0));
+        assertThat(response.endTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 11, 30));
+        assertThat(response.startUtcOffsetMinutes()).isEqualTo(60);
+    }
+
+    @Test
+    void updateBlock_convertsScheduledToBucket() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.SCHEDULED,
+                "박물관",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(BlockStatus.BUCKET, null, null, null);
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.updateBlock(room.getId(), block.getId(), request, member.getId());
+
+        assertThat(response.status()).isEqualTo(BlockStatus.BUCKET);
+        assertThat(response.startTime()).isNull();
+        assertThat(response.endTime()).isNull();
+        assertThat(response.startUtcOffsetMinutes()).isNull();
+        assertThat(response.endUtcOffsetMinutes()).isNull();
+    }
+
+    @Test
+    void updateBlock_throwsWhenBucketUpdateContainsScheduleFields() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.BUCKET,
+                "후보",
+                null,
+                null,
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        UpdateBlockRequestDto request =
+                new UpdateBlockRequestDto(null, null, LocalDateTime.of(2026, 4, 5, 10, 0), null);
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        assertThatThrownBy(() -> blockService.updateBlock(room.getId(), block.getId(), request, member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.BLOCK_SCHEDULE_NOT_ALLOWED);
     }
 
     private Room room() {
