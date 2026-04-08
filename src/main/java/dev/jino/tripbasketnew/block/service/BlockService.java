@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,12 +14,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import dev.jino.tripbasketnew.block.dto.BlockListItemResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockListPlaceResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockPlaceResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockReactionResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
+import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import dev.jino.tripbasketnew.block.repository.BlockRepository;
 import dev.jino.tripbasketnew.common.exception.BusinessException;
 import dev.jino.tripbasketnew.common.exception.ErrorCode;
@@ -37,6 +43,30 @@ public class BlockService {
     private final BlockRepository blockRepository;
     private final RoomAccessPolicy roomAccessPolicy;
     private final PlaceService placeService;
+
+    public BlockResponseDto getBlock(UUID roomId, UUID blockId, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+
+        Block block = findBlock(roomId, blockId);
+
+        return toResponse(block);
+    }
+
+    public BlockListResponseDto getBlocks(UUID roomId, String status, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+
+        BlockStatus blockStatus = BlockStatus.from(status);
+        List<Block> blocks = blockStatus == null
+                ? blockRepository.findAllByRoom_Id(roomId)
+                : blockRepository.findAllByRoom_IdAndStatus(roomId, blockStatus);
+
+        List<BlockListItemResponseDto> items = blocks.stream()
+                .sorted(blockComparator())
+                .map(this::toListItemResponse)
+                .toList();
+
+        return new BlockListResponseDto(items);
+    }
 
     @Transactional
     public BlockResponseDto createBlock(UUID roomId, CreateBlockRequestDto request, UUID memberId) {
@@ -58,6 +88,46 @@ public class BlockService {
         return toResponse(blockRepository.save(block));
     }
 
+    @Transactional
+    public BlockResponseDto updateBlock(UUID roomId, UUID blockId, UpdateBlockRequestDto request, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+        Block block = findBlock(roomId, blockId);
+
+        if (request.name() != null) {
+            block.rename(request.name());
+        }
+
+        BlockStatus targetStatus = request.status() != null ? request.status() : block.getStatus();
+        ZoneId zoneId = resolveZoneId(block.getTimezoneId());
+
+        if (targetStatus == BlockStatus.BUCKET) {
+            if (request.startTime() != null || request.endTime() != null) {
+                throw new BusinessException(ErrorCode.BLOCK_SCHEDULE_NOT_ALLOWED);
+            }
+            block.changeSchedule(BlockStatus.BUCKET, null, null);
+            return toResponse(block);
+        }
+
+        OffsetDateTime targetStart =
+                request.startTime() != null ? toUtc(request.startTime(), zoneId) : block.getStartTime();
+        OffsetDateTime targetEnd = request.endTime() != null ? toUtc(request.endTime(), zoneId) : block.getEndTime();
+        block.changeSchedule(BlockStatus.SCHEDULED, targetStart, targetEnd);
+        return toResponse(block);
+    }
+
+    @Transactional
+    public void deleteBlock(UUID roomId, UUID blockId, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+        Block block = findBlock(roomId, blockId);
+        blockRepository.delete(block);
+    }
+
+    private Block findBlock(UUID roomId, UUID blockId) {
+        return blockRepository
+                .findByIdAndRoom_Id(blockId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOCK_NOT_FOUND));
+    }
+
     private BlockResponseDto toResponse(Block block) {
         return new BlockResponseDto(
                 block.getId(),
@@ -76,6 +146,50 @@ public class BlockService {
                 block.getAddedAt(),
                 List.<BlockReactionResponseDto>of(),
                 List.<BlockTodoResponseDto>of());
+    }
+
+    private Comparator<Block> blockComparator() {
+        return Comparator.comparingInt(this::statusSortOrder)
+                .thenComparing(this::scheduledStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(this::scheduledAddedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(this::bucketAddedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+    }
+
+    private int statusSortOrder(Block block) {
+        return block.getStatus() == BlockStatus.SCHEDULED ? 0 : 1;
+    }
+
+    private OffsetDateTime scheduledStartTime(Block block) {
+        return block.getStatus() == BlockStatus.SCHEDULED ? block.getStartTime() : null;
+    }
+
+    private OffsetDateTime scheduledAddedAt(Block block) {
+        return block.getStatus() == BlockStatus.SCHEDULED ? block.getAddedAt() : null;
+    }
+
+    private OffsetDateTime bucketAddedAt(Block block) {
+        return block.getStatus() == BlockStatus.BUCKET ? block.getAddedAt() : null;
+    }
+
+    private BlockListItemResponseDto toListItemResponse(Block block) {
+        return new BlockListItemResponseDto(
+                block.getId(),
+                block.getRoom().getId(),
+                block.getStatus(),
+                new BlockListPlaceResponseDto(
+                        block.getPlace().getGooglePlaceId(),
+                        block.getPlace().getPlaceName(),
+                        block.getPlace().getLat(),
+                        block.getPlace().getLng()),
+                block.getName(),
+                toLocalTime(block.getStartTime(), block.getTimezoneId()),
+                toLocalTime(block.getEndTime(), block.getTimezoneId()),
+                block.getTimezoneId(),
+                toOffsetMinutes(block.getStartTime(), block.getTimezoneId()),
+                toOffsetMinutes(block.getEndTime(), block.getTimezoneId()),
+                block.getAddedBy().getId(),
+                block.getAddedAt(),
+                List.<BlockReactionResponseDto>of());
     }
 
     private ZoneId resolveZoneId(String timezoneId) {
