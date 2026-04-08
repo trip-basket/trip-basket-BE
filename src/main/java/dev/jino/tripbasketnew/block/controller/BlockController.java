@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.jino.tripbasketnew.block.controller.api.BlockApi;
+import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.service.BlockService;
@@ -18,6 +19,12 @@ import lombok.RequiredArgsConstructor;
 public class BlockController implements BlockApi {
 
     private final BlockService blockService;
+
+    @Override
+    public ResponseEntity<BlockListResponseDto> getBlocks(UUID roomId, String status, UserPrincipal userPrincipal) {
+        BlockListResponseDto response = blockService.getBlocks(roomId, status, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
+    }
 
     @Override
     public ResponseEntity<BlockResponseDto> createBlock(

@@ -3,6 +3,8 @@ package dev.jino.tripbasketnew.block.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,6 +32,7 @@ import dev.jino.tripbasketnew.room.policy.RoomAccessPolicy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -138,6 +141,94 @@ class BlockServiceTest {
                 .isEqualTo(ErrorCode.PLACE_TIMEZONE_UNAVAILABLE);
     }
 
+    @Test
+    void getBlocks_returnsScheduledFirstThenBucketsWithExpectedOrdering() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+
+        Block scheduledLater = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "점심",
+                OffsetDateTime.of(2026, 4, 5, 4, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 5, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 10, 0, 0, 0, ZoneOffset.UTC));
+        Block scheduledEarlier = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "박물관",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        Block bucketOlder = block(
+                room,
+                place,
+                member,
+                BlockStatus.BUCKET,
+                "카페 후보",
+                null,
+                null,
+                OffsetDateTime.of(2026, 4, 4, 8, 0, 0, 0, ZoneOffset.UTC));
+        Block bucketNewer = block(
+                room,
+                place,
+                member,
+                BlockStatus.BUCKET,
+                "저녁 후보",
+                null,
+                null,
+                OffsetDateTime.of(2026, 4, 4, 11, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findAllByRoom_Id(room.getId()))
+                .thenReturn(List.of(bucketOlder, scheduledLater, bucketNewer, scheduledEarlier));
+
+        var response = blockService.getBlocks(room.getId(), null, member.getId());
+
+        assertThat(response.blocks()).extracting("name").containsExactly("박물관", "점심", "저녁 후보", "카페 후보");
+        assertThat(response.blocks())
+                .extracting("status")
+                .containsExactly(BlockStatus.SCHEDULED, BlockStatus.SCHEDULED, BlockStatus.BUCKET, BlockStatus.BUCKET);
+        assertThat(response.blocks().get(0).place().placeId()).isEqualTo("google-place-id");
+        assertThat(response.blocks().get(0).place().lat()).isEqualTo(51.5194);
+        assertThat(response.blocks().get(0).reactions()).isEmpty();
+    }
+
+    @Test
+    void getBlocks_filtersByStatusWhenQueryParamIsProvided() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+        Block scheduled = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "박물관",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findAllByRoom_IdAndStatus(room.getId(), BlockStatus.SCHEDULED))
+                .thenReturn(List.of(scheduled));
+
+        var response = blockService.getBlocks(room.getId(), "scheduled", member.getId());
+
+        assertThat(response.blocks()).hasSize(1);
+        assertThat(response.blocks().get(0).status()).isEqualTo(BlockStatus.SCHEDULED);
+        verify(blockRepository).findAllByRoom_IdAndStatus(room.getId(), BlockStatus.SCHEDULED);
+    }
+
     private Room room() {
         return Room.builder()
                 .id(UUID.randomUUID())
@@ -176,5 +267,17 @@ class BlockServiceTest {
                         PlaceOpeningHour.of(0, LocalTime.of(10, 0), LocalTime.of(17, 0)),
                         PlaceOpeningHour.of(1, LocalTime.of(10, 0), LocalTime.of(20, 30))))
                 .build();
+    }
+
+    private Block block(
+            Room room,
+            Place place,
+            Member member,
+            BlockStatus status,
+            String name,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime,
+            OffsetDateTime addedAt) {
+        return Block.create(room, place, member, status, name, startTime, endTime, "Europe/London", addedAt);
     }
 }
