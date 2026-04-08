@@ -4,6 +4,55 @@ API 및 서비스 변경 사항을 빠르게 확인할 수 있도록 관리하�
 - API 계약에 영향을 주는 변경이 생기면 이 문서와 Swagger를 함께 확인해주세요.
 - 각 변경 항목에는 `프론트 영향: 낮음 | 보통 | 높음` 형식으로 영향도를 함께 적습니다.
 
+## 2026-04-08
+
+### 1. Block 목록 조회 API 추가
+
+###### 프론트 영향: `높음`
+- `GET /api/rooms/{roomId}/blocks` API를 추가했습니다.
+- 응답은 배열이 아니라 `{ "blocks": [...] }` 형태로 반환합니다.
+- `status` 쿼리파라미터를 지원합니다.
+  - 예: `?status=scheduled`, `?status=bucket`
+- 필터가 없으면 전체 블록을 조회합니다.
+- 각 항목은 목록 전용 응답 구조를 사용합니다.
+- 목록 응답의 `place`는 최소 정보만 포함합니다.
+  - `placeId` (`googlePlaceId`)
+  - `placeName`
+  - `lat`
+  - `lng`
+- 목록 응답에서는 `memo`, `todos`를 포함하지 않습니다.
+- `reactions`는 현재 단계에서 빈 배열로 포함됩니다.
+- 정렬 규칙은 다음과 같습니다.
+  - `scheduled` 블록이 먼저 옵니다.
+  - `scheduled` 내부는 `startTime asc`, 동률이면 `addedAt asc` 입니다.
+  - `bucket` 블록은 뒤에 오며 `addedAt desc` 입니다.
+
+### 2. Block 상세 조회 API 추가
+
+###### 프론트 영향: `높음`
+- `GET /api/rooms/{roomId}/blocks/{blockId}` API를 추가했습니다.
+- 상세 조회 응답은 Block 생성 응답과 동일한 구조를 사용합니다.
+- `place`에는 상세 정보가 포함됩니다.
+  - `googlePlaceId`, `placeName`, `position`, `category`, `formattedAddress`, `rating`, `reviewCount`, `openingHours`, `priceLevel`, `photoUrl`
+- `memo`는 현재 단계에서 `null`, `todos`, `reactions`는 빈 배열로 반환됩니다.
+
+### 3. Block 수정 API 추가
+
+###### 프론트 영향: `높음`
+- `PATCH /api/rooms/{roomId}/blocks/{blockId}` API를 추가했습니다.
+- 수정 가능한 필드는 `name`, `status`, `startTime`, `endTime` 입니다.
+- 전송하지 않은 필드는 기존 값을 유지합니다.
+- `bucket -> scheduled`, `scheduled -> bucket` 전환을 지원합니다.
+- `place`는 수정할 수 없습니다.
+- `bucket` 상태에서는 시간 값을 보낼 수 없습니다.
+
+### 4. Block 삭제 API 추가
+
+###### 프론트 영향: `높음`
+- `DELETE /api/rooms/{roomId}/blocks/{blockId}` API를 추가했습니다.
+- 삭제는 hard delete가 아니라 soft delete 입니다.
+- 성공 시 `204 No Content`를 반환합니다.
+
 ## 2026-04-07
 
 ### 1. Block 생성 응답의 장소 좌표 구조 정리
