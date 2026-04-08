@@ -34,6 +34,7 @@ import dev.jino.tripbasketnew.room.policy.RoomAccessPolicy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -392,6 +393,49 @@ class BlockServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.BLOCK_SCHEDULE_NOT_ALLOWED);
+    }
+
+    @Test
+    void deleteBlock_softDeletesWhenBlockExistsInRoom() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.BUCKET,
+                "후보",
+                null,
+                null,
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        blockService.deleteBlock(room.getId(), block.getId(), member.getId());
+
+        verify(blockRepository).delete(block);
+    }
+
+    @Test
+    void deleteBlock_throwsWhenBlockDoesNotExistInRoom() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        UUID missingBlockId = UUID.randomUUID();
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(missingBlockId, room.getId())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> blockService.deleteBlock(room.getId(), missingBlockId, member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.BLOCK_NOT_FOUND);
+
+        verify(blockRepository, never()).delete(any(Block.class));
     }
 
     private Room room() {

@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -91,6 +92,19 @@ public interface BlockApi {
             @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
             @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
             @Valid @RequestBody UpdateBlockRequestDto request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 삭제", description = "방 참여자가 특정 블록을 soft delete 합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방 또는 블록을 찾을 수 없음", content = @Content)
+    })
+    @DeleteMapping("/{blockId}")
+    ResponseEntity<Void> deleteBlock(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
             @AuthenticationPrincipal UserPrincipal userPrincipal);
 
     @Operation(summary = "블록 생성", description = "방 참여자가 bucket 또는 scheduled 상태의 블록을 생성합니다.")

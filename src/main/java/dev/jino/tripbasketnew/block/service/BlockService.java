@@ -115,6 +115,13 @@ public class BlockService {
         return toResponse(block);
     }
 
+    @Transactional
+    public void deleteBlock(UUID roomId, UUID blockId, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+        Block block = findBlock(roomId, blockId);
+        blockRepository.delete(block);
+    }
+
     private Block findBlock(UUID roomId, UUID blockId) {
         return blockRepository
                 .findByIdAndRoom_Id(blockId, roomId)
