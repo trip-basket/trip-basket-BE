@@ -21,6 +21,7 @@ public enum ErrorCode {
     ROOM_OWNER_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "Room owner cannot leave", "방장은 나갈 수 없습니다. 방 삭제를 이용해주세요."),
 
     // Block 관련
+    BLOCK_NOT_FOUND(HttpStatus.NOT_FOUND, "Block not found", "해당 블록을 찾을 수 없습니다."),
     BLOCK_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "status must not be null", "블록 상태는 필수입니다."),
     BLOCK_STATUS_INVALID(
             HttpStatus.BAD_REQUEST,

@@ -43,6 +43,16 @@ public class BlockService {
     private final RoomAccessPolicy roomAccessPolicy;
     private final PlaceService placeService;
 
+    public BlockResponseDto getBlock(UUID roomId, UUID blockId, UUID memberId) {
+        roomAccessPolicy.validateParticipantAccess(roomId, memberId);
+
+        Block block = blockRepository
+                .findByIdAndRoom_Id(blockId, roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOCK_NOT_FOUND));
+
+        return toResponse(block);
+    }
+
     public BlockListResponseDto getBlocks(UUID roomId, String status, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
 

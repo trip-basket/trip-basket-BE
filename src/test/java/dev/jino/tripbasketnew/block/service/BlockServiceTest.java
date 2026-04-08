@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -227,6 +228,56 @@ class BlockServiceTest {
         assertThat(response.blocks()).hasSize(1);
         assertThat(response.blocks().get(0).status()).isEqualTo(BlockStatus.SCHEDULED);
         verify(blockRepository).findAllByRoom_IdAndStatus(room.getId(), BlockStatus.SCHEDULED);
+    }
+
+    @Test
+    void getBlock_returnsDetailedBlockResponse() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+        Block block = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "대영박물관 관람",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.getBlock(room.getId(), block.getId(), member.getId());
+
+        assertThat(response.id()).isEqualTo(block.getId());
+        assertThat(response.roomId()).isEqualTo(room.getId());
+        assertThat(response.status()).isEqualTo(BlockStatus.SCHEDULED);
+        assertThat(response.place().googlePlaceId()).isEqualTo("google-place-id");
+        assertThat(response.place().position().lat()).isEqualTo(51.5194);
+        assertThat(response.place().rating()).isEqualTo(4.7);
+        assertThat(response.memo()).isNull();
+        assertThat(response.todos()).isEmpty();
+        assertThat(response.reactions()).isEmpty();
+    }
+
+    @Test
+    void getBlock_throwsWhenBlockDoesNotExistInRoom() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        UUID missingBlockId = UUID.randomUUID();
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(missingBlockId, room.getId())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> blockService.getBlock(room.getId(), missingBlockId, member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.BLOCK_NOT_FOUND);
     }
 
     private Room room() {

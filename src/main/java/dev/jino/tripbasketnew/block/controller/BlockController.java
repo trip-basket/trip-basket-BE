@@ -27,6 +27,12 @@ public class BlockController implements BlockApi {
     }
 
     @Override
+    public ResponseEntity<BlockResponseDto> getBlock(UUID roomId, UUID blockId, UserPrincipal userPrincipal) {
+        BlockResponseDto response = blockService.getBlock(roomId, blockId, userPrincipal.getMemberId());
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
     public ResponseEntity<BlockResponseDto> createBlock(
             UUID roomId, CreateBlockRequestDto request, UserPrincipal userPrincipal) {
         BlockResponseDto response = blockService.createBlock(roomId, request, userPrincipal.getMemberId());
