@@ -1,0 +1,3 @@
+ALTER TABLE places ALTER COLUMN photo_url SET DATA TYPE TEXT;
+
+ALTER TABLE places ALTER COLUMN formatted_address SET DATA TYPE TEXT;
