@@ -45,7 +45,7 @@ public class Place extends SoftDeletableEntity {
     @Column(name = "category")
     private String category;
 
-    @Column(name = "formatted_address")
+    @Column(name = "formatted_address", columnDefinition = "TEXT")
     private String formattedAddress;
 
     @Column(name = "rating")
@@ -57,7 +57,7 @@ public class Place extends SoftDeletableEntity {
     @Column(name = "price_level")
     private Integer priceLevel;
 
-    @Column(name = "photo_url")
+    @Column(name = "photo_url", columnDefinition = "TEXT")
     private String photoUrl;
 
     @Column(name = "timezone_id", nullable = false)
