@@ -8,6 +8,5 @@ public record BlockListPlaceResponseDto(
 
         @Schema(description = "장소 원본 이름", example = "대영박물관") String placeName,
 
-        @Schema(description = "위도", example = "51.5194") Double lat,
-
-        @Schema(description = "경도", example = "-0.1270") Double lng) {}
+        @Schema(description = "카테고리. 분류 정보가 없으면 null일 수 있습니다.", nullable = true, example = "attraction")
+        String category) {}

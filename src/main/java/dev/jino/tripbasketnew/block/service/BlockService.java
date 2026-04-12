@@ -179,8 +179,7 @@ public class BlockService {
                 new BlockListPlaceResponseDto(
                         block.getPlace().getGooglePlaceId(),
                         block.getPlace().getPlaceName(),
-                        block.getPlace().getLat(),
-                        block.getPlace().getLng()),
+                        block.getPlace().getCategory()),
                 block.getName(),
                 toLocalTime(block.getStartTime(), block.getTimezoneId()),
                 toLocalTime(block.getEndTime(), block.getTimezoneId()),
