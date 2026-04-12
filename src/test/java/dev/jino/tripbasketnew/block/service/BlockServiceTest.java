@@ -200,7 +200,8 @@ class BlockServiceTest {
                 .extracting("status")
                 .containsExactly(BlockStatus.SCHEDULED, BlockStatus.SCHEDULED, BlockStatus.BUCKET, BlockStatus.BUCKET);
         assertThat(response.blocks().get(0).place().placeId()).isEqualTo("google-place-id");
-        assertThat(response.blocks().get(0).place().lat()).isEqualTo(51.5194);
+        assertThat(response.blocks().get(0).place().placeName()).isEqualTo("대영박물관");
+        assertThat(response.blocks().get(0).place().category()).isEqualTo("attraction");
         assertThat(response.blocks().get(0).reactions()).isEmpty();
     }
 
