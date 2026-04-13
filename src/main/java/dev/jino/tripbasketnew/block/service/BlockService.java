@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import dev.jino.tripbasketnew.block.dto.BlockListItemResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockListPlaceResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
@@ -96,6 +98,9 @@ public class BlockService {
         if (request.name() != null) {
             block.rename(request.name());
         }
+        if (request.memo() != null) {
+            block.updateMemo(parseMemo(request.memo()));
+        }
 
         BlockStatus targetStatus = request.status() != null ? request.status() : block.getStatus();
         ZoneId zoneId = resolveZoneId(block.getTimezoneId());
@@ -141,7 +146,7 @@ public class BlockService {
                 toOffsetMinutes(block.getStartTime(), block.getTimezoneId()),
                 toOffsetMinutes(block.getEndTime(), block.getTimezoneId()),
                 null,
-                null,
+                block.getMemo(),
                 block.getAddedBy().getId(),
                 block.getAddedAt(),
                 List.<BlockReactionResponseDto>of(),
@@ -231,6 +236,13 @@ public class BlockService {
             return null;
         }
         return String.format("%02d:%02d", time.getHour(), time.getMinute());
+    }
+
+    private String parseMemo(JsonNode memoNode) {
+        if (memoNode == null || memoNode.isNull()) {
+            return null;
+        }
+        return memoNode.asText();
     }
 
     private OffsetDateTime toUtc(LocalDateTime localDateTime, ZoneId zoneId) {

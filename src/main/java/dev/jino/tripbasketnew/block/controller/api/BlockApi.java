@@ -73,7 +73,7 @@ public interface BlockApi {
             @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
             @AuthenticationPrincipal UserPrincipal userPrincipal);
 
-    @Operation(summary = "블록 수정", description = "방 참여자가 블록 이름, 상태, 시간을 수정합니다.")
+    @Operation(summary = "블록 수정", description = "방 참여자가 블록 이름, 상태, 시간, 메모를 수정합니다.")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

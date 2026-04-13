@@ -51,7 +51,7 @@ public record BlockResponseDto(
         @Schema(description = "예상 또는 기록 비용. 아직 미구현 단계에서는 null일 수 있습니다.", nullable = true, example = "12.50")
         BigDecimal cost,
 
-        @Schema(description = "메모. 아직 미구현 단계에서는 null일 수 있습니다.", nullable = true, example = "입장 무료, 기부금 환영")
+        @Schema(description = "메모. 값이 없으면 null일 수 있습니다.", nullable = true, example = "입장 무료")
         String memo,
 
         @Schema(description = "블록을 추가한 멤버 ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")

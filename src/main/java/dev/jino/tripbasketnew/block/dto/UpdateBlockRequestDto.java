@@ -2,6 +2,8 @@ package dev.jino.tripbasketnew.block.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import dev.jino.tripbasketnew.block.entity.BlockStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
@@ -28,4 +30,11 @@ public record UpdateBlockRequestDto(
                 description = "변경할 블록 종료 시각. timezoneId 기준 로컬 시간입니다. 미전송 시 기존 값을 유지합니다.",
                 nullable = true,
                 example = "2024-03-16T11:30:00")
-        LocalDateTime endTime) {}
+        LocalDateTime endTime,
+
+        @Schema(
+                description = "변경할 메모. 미전송 시 기존 값을 유지하고, null 전송 시 값을 삭제합니다.",
+                type = "string",
+                nullable = true,
+                example = "입장 무료")
+        JsonNode memo) {}
