@@ -5,6 +5,9 @@ import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import dev.jino.tripbasketnew.common.exception.BusinessException;
+import dev.jino.tripbasketnew.common.exception.ErrorCode;
+
 public enum BlockReactionType {
     LIKE("like");
 
@@ -24,6 +27,6 @@ public enum BlockReactionType {
         return Arrays.stream(values())
                 .filter(type -> type.value.equalsIgnoreCase(value))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unsupported block reaction type: " + value));
+                .orElseThrow(() -> new BusinessException(ErrorCode.BLOCK_REACTION_TYPE_INVALID));
     }
 }
