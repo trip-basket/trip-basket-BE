@@ -151,6 +151,27 @@ class BlockTodoServiceTest {
     }
 
     @Test
+    void deleteTodo_throwsWhenTodoDoesNotExist() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(room, member);
+        UUID missingTodoId = UUID.randomUUID();
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+        when(blockTodoRepository.findByIdAndBlock_Id(missingTodoId, block.getId()))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(
+                        () -> blockTodoService.deleteTodo(room.getId(), block.getId(), missingTodoId, member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.BLOCK_TODO_NOT_FOUND);
+    }
+
+    @Test
     void softDeleteByBlockId_deletesAllTodosForBlock() {
         Block block = block();
         BlockTodo first = BlockTodo.create(block, "첫번째");
