@@ -27,7 +27,7 @@ public class BlockTodo extends SoftDeletableEntity {
     @JoinColumn(name = "block_id", nullable = false)
     private Block block;
 
-    @Column(name = "text", nullable = false)
+    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
     private String text;
 
     @Column(name = "completed", nullable = false)
