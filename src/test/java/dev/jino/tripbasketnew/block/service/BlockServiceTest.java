@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import dev.jino.tripbasketnew.block.dto.BlockReactionResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
@@ -58,11 +59,16 @@ class BlockServiceTest {
     @Mock
     private BlockTodoService blockTodoService;
 
+    @Mock
+    private BlockReactionService blockReactionService;
+
     private BlockService blockService;
 
     @BeforeEach
     void setUp() {
-        blockService = new BlockService(blockRepository, roomAccessPolicy, placeService, blockTodoService);
+        blockService = new BlockService(
+                blockRepository, roomAccessPolicy, placeService, blockTodoService, blockReactionService);
+        lenient().when(blockReactionService.getReactionResponses(any())).thenReturn(List.of());
         lenient().when(blockTodoService.getTodoResponses(any())).thenReturn(List.of());
     }
 
@@ -299,6 +305,36 @@ class BlockServiceTest {
         BlockResponseDto response = blockService.getBlock(room.getId(), block.getId(), member.getId());
 
         assertThat(response.memo()).isEqualTo("입장 무료");
+    }
+
+    @Test
+    void getBlock_returnsReactionsFromReactionService() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+        Block block = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "대영박물관 관람",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+        when(blockReactionService.getReactionResponses(block.getId()))
+                .thenReturn(List.of(
+                        new BlockReactionResponseDto(UUID.randomUUID(), block.getId(), member.getId(), "like")));
+
+        BlockResponseDto response = blockService.getBlock(room.getId(), block.getId(), member.getId());
+
+        assertThat(response.reactions()).hasSize(1);
+        assertThat(response.reactions().get(0).blockId()).isEqualTo(block.getId());
+        assertThat(response.reactions().get(0).type()).isEqualTo("like");
     }
 
     @Test
@@ -563,6 +599,7 @@ class BlockServiceTest {
 
         blockService.deleteBlock(room.getId(), block.getId(), member.getId());
 
+        verify(blockReactionService).hardDeleteByBlockId(block.getId());
         verify(blockTodoService).softDeleteByBlockId(block.getId());
         verify(blockRepository).delete(block);
     }

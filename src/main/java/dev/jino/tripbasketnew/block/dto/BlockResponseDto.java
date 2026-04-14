@@ -60,7 +60,7 @@ public record BlockResponseDto(
         @Schema(description = "블록 생성 시각", example = "2026-02-12T12:00:00Z")
         OffsetDateTime addedAt,
 
-        @Schema(description = "리액션 목록. 아직 미구현 단계에서는 빈 배열일 수 있습니다.")
+        @Schema(description = "리액션 목록. 리액션이 없으면 빈 배열로 반환됩니다.")
         List<BlockReactionResponseDto> reactions,
 
         @Schema(description = "투두 목록. 투두가 없으면 빈 배열로 반환됩니다.") List<BlockTodoResponseDto> todos) {}

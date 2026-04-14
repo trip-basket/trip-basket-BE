@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockReactionResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
+import dev.jino.tripbasketnew.block.dto.CreateBlockReactionRequestDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockTodoRequestDto;
 import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
@@ -165,6 +167,42 @@ public interface BlockApi {
             @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
             @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
             @Parameter(description = "투두 ID") @PathVariable("todoId") UUID todoId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 리액션 생성", description = "방 참여자가 블록에 리액션을 추가합니다.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "201",
+                description = "생성 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = BlockReactionResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방 또는 블록을 찾을 수 없음", content = @Content),
+        @ApiResponse(responseCode = "409", description = "이미 같은 리액션이 존재함", content = @Content)
+    })
+    @PostMapping("/{blockId}/reactions")
+    ResponseEntity<BlockReactionResponseDto> createReaction(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @Valid @RequestBody CreateBlockReactionRequestDto request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 리액션 삭제", description = "방 참여자가 본인이 남긴 블록 리액션을 삭제합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "본인 리액션만 삭제 가능", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방, 블록 또는 리액션을 찾을 수 없음", content = @Content)
+    })
+    @DeleteMapping("/{blockId}/reactions/{reactionId}")
+    ResponseEntity<Void> deleteReaction(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @Parameter(description = "리액션 ID") @PathVariable("reactionId") UUID reactionId,
             @AuthenticationPrincipal UserPrincipal userPrincipal);
 
     @Operation(summary = "블록 생성", description = "방 참여자가 bucket 또는 scheduled 상태의 블록을 생성합니다.")
