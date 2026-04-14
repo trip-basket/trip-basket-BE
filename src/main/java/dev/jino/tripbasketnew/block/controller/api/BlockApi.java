@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.CreateBlockTodoRequestDto;
 import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
+import dev.jino.tripbasketnew.block.dto.UpdateBlockTodoRequestDto;
 import dev.jino.tripbasketnew.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -73,7 +76,7 @@ public interface BlockApi {
             @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
             @AuthenticationPrincipal UserPrincipal userPrincipal);
 
-    @Operation(summary = "블록 수정", description = "방 참여자가 블록 이름, 상태, 시간을 수정합니다.")
+    @Operation(summary = "블록 수정", description = "방 참여자가 블록 이름, 상태, 시간, 메모를 수정합니다.")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -105,6 +108,63 @@ public interface BlockApi {
     ResponseEntity<Void> deleteBlock(
             @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
             @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 투두 생성", description = "방 참여자가 블록에 투두를 추가합니다.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "201",
+                description = "생성 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = BlockTodoResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방 또는 블록을 찾을 수 없음", content = @Content)
+    })
+    @PostMapping("/{blockId}/todos")
+    ResponseEntity<BlockTodoResponseDto> createTodo(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @Valid @RequestBody CreateBlockTodoRequestDto request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 투두 수정", description = "방 참여자가 블록 투두의 내용 또는 완료 상태를 수정합니다.")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "수정 성공",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                schema = @Schema(implementation = BlockTodoResponseDto.class))),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방, 블록 또는 투두를 찾을 수 없음", content = @Content)
+    })
+    @PatchMapping("/{blockId}/todos/{todoId}")
+    ResponseEntity<BlockTodoResponseDto> updateTodo(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @Parameter(description = "투두 ID") @PathVariable("todoId") UUID todoId,
+            @Valid @RequestBody UpdateBlockTodoRequestDto request,
+            @AuthenticationPrincipal UserPrincipal userPrincipal);
+
+    @Operation(summary = "블록 투두 삭제", description = "방 참여자가 블록 투두를 soft delete 합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "삭제 성공", content = @Content),
+        @ApiResponse(responseCode = "401", description = "인증 필요", content = @Content),
+        @ApiResponse(responseCode = "403", description = "방 접근 권한 없음", content = @Content),
+        @ApiResponse(responseCode = "404", description = "방, 블록 또는 투두를 찾을 수 없음", content = @Content)
+    })
+    @DeleteMapping("/{blockId}/todos/{todoId}")
+    ResponseEntity<Void> deleteTodo(
+            @Parameter(description = "방 ID") @PathVariable("roomId") UUID roomId,
+            @Parameter(description = "블록 ID") @PathVariable("blockId") UUID blockId,
+            @Parameter(description = "투두 ID") @PathVariable("todoId") UUID todoId,
             @AuthenticationPrincipal UserPrincipal userPrincipal);
 
     @Operation(summary = "블록 생성", description = "방 참여자가 bucket 또는 scheduled 상태의 블록을 생성합니다.")

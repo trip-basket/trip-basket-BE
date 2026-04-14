@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.springframework.util.StringUtils;
 
 import dev.jino.tripbasketnew.common.entity.SoftDeletableEntity;
 import dev.jino.tripbasketnew.common.exception.BusinessException;
@@ -62,6 +63,9 @@ public class Block extends SoftDeletableEntity {
     @Column(name = "added_at", nullable = false)
     private OffsetDateTime addedAt;
 
+    @Column(name = "memo", columnDefinition = "TEXT")
+    private String memo;
+
     public static Block create(
             Room room,
             Place place,
@@ -92,6 +96,10 @@ public class Block extends SoftDeletableEntity {
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    public void updateMemo(String memo) {
+        this.memo = StringUtils.hasText(memo) ? memo.strip() : null;
     }
 
     private void validateSchedule(BlockStatus status, OffsetDateTime startTime, OffsetDateTime endTime) {

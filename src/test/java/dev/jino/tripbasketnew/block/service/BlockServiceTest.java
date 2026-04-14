@@ -15,7 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
@@ -34,6 +38,7 @@ import dev.jino.tripbasketnew.room.policy.RoomAccessPolicy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,11 +55,15 @@ class BlockServiceTest {
     @Mock
     private PlaceService placeService;
 
+    @Mock
+    private BlockTodoService blockTodoService;
+
     private BlockService blockService;
 
     @BeforeEach
     void setUp() {
-        blockService = new BlockService(blockRepository, roomAccessPolicy, placeService);
+        blockService = new BlockService(blockRepository, roomAccessPolicy, placeService, blockTodoService);
+        lenient().when(blockTodoService.getTodoResponses(any())).thenReturn(List.of());
     }
 
     @Test
@@ -267,6 +276,61 @@ class BlockServiceTest {
     }
 
     @Test
+    void getBlock_returnsStoredMemo() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+        Block block = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "대영박물관 관람",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        block.updateMemo("입장 무료");
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.getBlock(room.getId(), block.getId(), member.getId());
+
+        assertThat(response.memo()).isEqualTo("입장 무료");
+    }
+
+    @Test
+    void getBlock_returnsTodosFromTodoService() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+        Block block = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "대영박물관 관람",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+        when(blockTodoService.getTodoResponses(block.getId()))
+                .thenReturn(List.of(
+                        new BlockTodoResponseDto(UUID.randomUUID(), "오디오 가이드 대여", false),
+                        new BlockTodoResponseDto(UUID.randomUUID(), "기념품샵 들르기", true)));
+
+        BlockResponseDto response = blockService.getBlock(room.getId(), block.getId(), member.getId());
+
+        assertThat(response.todos()).extracting("text").containsExactly("오디오 가이드 대여", "기념품샵 들르기");
+    }
+
+    @Test
     void getBlock_throwsWhenBlockDoesNotExistInRoom() {
         Room room = room();
         Member member = member();
@@ -297,7 +361,7 @@ class BlockServiceTest {
                 OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
                 OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
                 OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
-        UpdateBlockRequestDto request = new UpdateBlockRequestDto(null, "  새 이름  ", null, null);
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(null, "  새 이름  ", null, null, null);
 
         when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
                 .thenReturn(roomMember);
@@ -309,6 +373,84 @@ class BlockServiceTest {
         assertThat(response.status()).isEqualTo(BlockStatus.SCHEDULED);
         assertThat(response.startTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 2, 0));
         assertThat(response.endTime()).isEqualTo(LocalDateTime.of(2026, 4, 5, 3, 0));
+    }
+
+    @Test
+    void updateBlock_updatesMemoWhenProvided() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.SCHEDULED,
+                "기존 이름",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        UpdateBlockRequestDto request =
+                new UpdateBlockRequestDto(null, null, null, null, TextNode.valueOf("  입장 무료  "));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.updateBlock(room.getId(), block.getId(), request, member.getId());
+
+        assertThat(response.memo()).isEqualTo("입장 무료");
+    }
+
+    @Test
+    void updateBlock_clearsMemoWhenExplicitNullProvided() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.SCHEDULED,
+                "기존 이름",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        block.updateMemo("기존 메모");
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(null, null, null, null, NullNode.getInstance());
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.updateBlock(room.getId(), block.getId(), request, member.getId());
+
+        assertThat(response.memo()).isNull();
+    }
+
+    @Test
+    void updateBlock_keepsMemoWhenNotProvided() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(
+                room,
+                place(),
+                member,
+                BlockStatus.SCHEDULED,
+                "기존 이름",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+        block.updateMemo("기존 메모");
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(null, "새 이름", null, null, null);
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+
+        BlockResponseDto response = blockService.updateBlock(room.getId(), block.getId(), request, member.getId());
+
+        assertThat(response.memo()).isEqualTo("기존 메모");
     }
 
     @Test
@@ -326,7 +468,11 @@ class BlockServiceTest {
                 null,
                 OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
         UpdateBlockRequestDto request = new UpdateBlockRequestDto(
-                BlockStatus.SCHEDULED, null, LocalDateTime.of(2026, 4, 5, 10, 0), LocalDateTime.of(2026, 4, 5, 11, 30));
+                BlockStatus.SCHEDULED,
+                null,
+                LocalDateTime.of(2026, 4, 5, 10, 0),
+                LocalDateTime.of(2026, 4, 5, 11, 30),
+                null);
 
         when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
                 .thenReturn(roomMember);
@@ -354,7 +500,7 @@ class BlockServiceTest {
                 OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
                 OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
                 OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
-        UpdateBlockRequestDto request = new UpdateBlockRequestDto(BlockStatus.BUCKET, null, null, null);
+        UpdateBlockRequestDto request = new UpdateBlockRequestDto(BlockStatus.BUCKET, null, null, null, null);
 
         when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
                 .thenReturn(roomMember);
@@ -384,7 +530,7 @@ class BlockServiceTest {
                 null,
                 OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
         UpdateBlockRequestDto request =
-                new UpdateBlockRequestDto(null, null, LocalDateTime.of(2026, 4, 5, 10, 0), null);
+                new UpdateBlockRequestDto(null, null, LocalDateTime.of(2026, 4, 5, 10, 0), null, null);
 
         when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
                 .thenReturn(roomMember);
@@ -417,6 +563,7 @@ class BlockServiceTest {
 
         blockService.deleteBlock(room.getId(), block.getId(), member.getId());
 
+        verify(blockTodoService).softDeleteByBlockId(block.getId());
         verify(blockRepository).delete(block);
     }
 

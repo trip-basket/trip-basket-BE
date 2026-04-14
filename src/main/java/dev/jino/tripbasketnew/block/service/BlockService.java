@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import dev.jino.tripbasketnew.block.dto.BlockListItemResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockListPlaceResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
@@ -43,6 +45,7 @@ public class BlockService {
     private final BlockRepository blockRepository;
     private final RoomAccessPolicy roomAccessPolicy;
     private final PlaceService placeService;
+    private final BlockTodoService blockTodoService;
 
     public BlockResponseDto getBlock(UUID roomId, UUID blockId, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
@@ -96,6 +99,9 @@ public class BlockService {
         if (request.name() != null) {
             block.rename(request.name());
         }
+        if (request.memo() != null) {
+            block.updateMemo(parseMemo(request.memo()));
+        }
 
         BlockStatus targetStatus = request.status() != null ? request.status() : block.getStatus();
         ZoneId zoneId = resolveZoneId(block.getTimezoneId());
@@ -119,6 +125,7 @@ public class BlockService {
     public void deleteBlock(UUID roomId, UUID blockId, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
         Block block = findBlock(roomId, blockId);
+        blockTodoService.softDeleteByBlockId(block.getId());
         blockRepository.delete(block);
     }
 
@@ -129,6 +136,7 @@ public class BlockService {
     }
 
     private BlockResponseDto toResponse(Block block) {
+        List<BlockTodoResponseDto> todos = blockTodoService.getTodoResponses(block.getId());
         return new BlockResponseDto(
                 block.getId(),
                 block.getRoom().getId(),
@@ -141,11 +149,11 @@ public class BlockService {
                 toOffsetMinutes(block.getStartTime(), block.getTimezoneId()),
                 toOffsetMinutes(block.getEndTime(), block.getTimezoneId()),
                 null,
-                null,
+                block.getMemo(),
                 block.getAddedBy().getId(),
                 block.getAddedAt(),
                 List.<BlockReactionResponseDto>of(),
-                List.<BlockTodoResponseDto>of());
+                todos);
     }
 
     private Comparator<Block> blockComparator() {
@@ -231,6 +239,13 @@ public class BlockService {
             return null;
         }
         return String.format("%02d:%02d", time.getHour(), time.getMinute());
+    }
+
+    private String parseMemo(JsonNode memoNode) {
+        if (memoNode == null || memoNode.isNull()) {
+            return null;
+        }
+        return memoNode.asText();
     }
 
     private OffsetDateTime toUtc(LocalDateTime localDateTime, ZoneId zoneId) {

@@ -4,6 +4,30 @@ API 및 서비스 변경 사항을 빠르게 확인할 수 있도록 관리하�
 - API 계약에 영향을 주는 변경이 생기면 이 문서와 Swagger를 함께 확인해주세요.
 - 각 변경 항목에는 `프론트 영향: 낮음 | 보통 | 높음` 형식으로 영향도를 함께 적습니다.
 
+## 2026-04-14
+
+### 1. Block todo 하위 API 추가
+
+###### 프론트 영향: `높음`
+- 블록 투두는 블록 수정 API가 아니라 하위 API로 분리했습니다.
+- 추가된 API:
+  - `POST /api/rooms/{roomId}/blocks/{blockId}/todos`
+  - `PATCH /api/rooms/{roomId}/blocks/{blockId}/todos/{todoId}`
+  - `DELETE /api/rooms/{roomId}/blocks/{blockId}/todos/{todoId}`
+- `GET /api/rooms/{roomId}/blocks/{blockId}` 응답의 `todos`는 실제 저장된 값을 반환합니다.
+- `todos`는 생성 순서(`createdAt asc`)로 정렬됩니다.
+- 블록이 삭제되면 연결된 `todo`들도 함께 soft delete 됩니다.
+
+## 2026-04-13
+
+### 1. Block memo 구현
+
+##### 프론트 영향: `보통`
+- `PATCH /api/rooms/{roomId}/blocks/{blockId}` 에서 `memo`를 수정할 수 있습니다.
+- `memo`를 요청 본문에서 보내지 않으면 기존 값을 유지합니다.
+- `memo`를 명시적으로 `null`로 보내면 기존 메모가 삭제됩니다.
+- `GET /api/rooms/{roomId}/blocks/{blockId}` 응답의 `memo`는 저장된 값을 반환합니다.
+
 ## 2026-04-12
 
 ### 1. Block 목록 조회 place 요약 필드 조정
