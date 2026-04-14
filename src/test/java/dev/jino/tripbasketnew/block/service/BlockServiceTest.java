@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
@@ -37,6 +38,7 @@ import dev.jino.tripbasketnew.room.policy.RoomAccessPolicy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,11 +55,15 @@ class BlockServiceTest {
     @Mock
     private PlaceService placeService;
 
+    @Mock
+    private BlockTodoService blockTodoService;
+
     private BlockService blockService;
 
     @BeforeEach
     void setUp() {
-        blockService = new BlockService(blockRepository, roomAccessPolicy, placeService);
+        blockService = new BlockService(blockRepository, roomAccessPolicy, placeService, blockTodoService);
+        lenient().when(blockTodoService.getTodoResponses(any())).thenReturn(List.of());
     }
 
     @Test
@@ -296,6 +302,35 @@ class BlockServiceTest {
     }
 
     @Test
+    void getBlock_returnsTodosFromTodoService() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Place place = place();
+        Block block = block(
+                room,
+                place,
+                member,
+                BlockStatus.SCHEDULED,
+                "대영박물관 관람",
+                OffsetDateTime.of(2026, 4, 5, 1, 0, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 5, 2, 30, 0, 0, ZoneOffset.UTC),
+                OffsetDateTime.of(2026, 4, 4, 9, 0, 0, 0, ZoneOffset.UTC));
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+        when(blockTodoService.getTodoResponses(block.getId()))
+                .thenReturn(List.of(
+                        new BlockTodoResponseDto(UUID.randomUUID(), "오디오 가이드 대여", false),
+                        new BlockTodoResponseDto(UUID.randomUUID(), "기념품샵 들르기", true)));
+
+        BlockResponseDto response = blockService.getBlock(room.getId(), block.getId(), member.getId());
+
+        assertThat(response.todos()).extracting("text").containsExactly("오디오 가이드 대여", "기념품샵 들르기");
+    }
+
+    @Test
     void getBlock_throwsWhenBlockDoesNotExistInRoom() {
         Room room = room();
         Member member = member();
@@ -528,6 +563,7 @@ class BlockServiceTest {
 
         blockService.deleteBlock(room.getId(), block.getId(), member.getId());
 
+        verify(blockTodoService).softDeleteByBlockId(block.getId());
         verify(blockRepository).delete(block);
     }
 

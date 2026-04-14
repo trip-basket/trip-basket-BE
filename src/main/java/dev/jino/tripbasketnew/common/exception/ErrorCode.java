@@ -36,6 +36,7 @@ public enum ErrorCode {
             "bucket block must not include startTime and endTime",
             "bucket 상태에서는 시작 시간과 종료 시간을 보낼 수 없습니다."),
     BLOCK_INVALID_TIME_RANGE(HttpStatus.BAD_REQUEST, "endTime must be after startTime", "종료 시간은 시작 시간보다 뒤여야 합니다."),
+    BLOCK_TODO_NOT_FOUND(HttpStatus.NOT_FOUND, "Block todo not found", "해당 투두를 찾을 수 없습니다."),
 
     // Place 관련
     PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다."),

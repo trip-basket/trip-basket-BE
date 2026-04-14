@@ -45,6 +45,7 @@ public class BlockService {
     private final BlockRepository blockRepository;
     private final RoomAccessPolicy roomAccessPolicy;
     private final PlaceService placeService;
+    private final BlockTodoService blockTodoService;
 
     public BlockResponseDto getBlock(UUID roomId, UUID blockId, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
@@ -124,6 +125,7 @@ public class BlockService {
     public void deleteBlock(UUID roomId, UUID blockId, UUID memberId) {
         roomAccessPolicy.validateParticipantAccess(roomId, memberId);
         Block block = findBlock(roomId, blockId);
+        blockTodoService.softDeleteByBlockId(block.getId());
         blockRepository.delete(block);
     }
 
@@ -134,6 +136,7 @@ public class BlockService {
     }
 
     private BlockResponseDto toResponse(Block block) {
+        List<BlockTodoResponseDto> todos = blockTodoService.getTodoResponses(block.getId());
         return new BlockResponseDto(
                 block.getId(),
                 block.getRoom().getId(),
@@ -150,7 +153,7 @@ public class BlockService {
                 block.getAddedBy().getId(),
                 block.getAddedAt(),
                 List.<BlockReactionResponseDto>of(),
-                List.<BlockTodoResponseDto>of());
+                todos);
     }
 
     private Comparator<Block> blockComparator() {

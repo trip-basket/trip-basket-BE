@@ -63,5 +63,4 @@ public record BlockResponseDto(
         @Schema(description = "리액션 목록. 아직 미구현 단계에서는 빈 배열일 수 있습니다.")
         List<BlockReactionResponseDto> reactions,
 
-        @Schema(description = "투두 목록. 아직 미구현 단계에서는 빈 배열일 수 있습니다.")
-        List<BlockTodoResponseDto> todos) {}
+        @Schema(description = "투두 목록. 투두가 없으면 빈 배열로 반환됩니다.") List<BlockTodoResponseDto> todos) {}
