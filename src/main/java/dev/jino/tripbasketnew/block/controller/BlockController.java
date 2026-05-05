@@ -8,12 +8,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import dev.jino.tripbasketnew.block.controller.api.BlockApi;
 import dev.jino.tripbasketnew.block.dto.BlockListResponseDto;
+import dev.jino.tripbasketnew.block.dto.BlockReactionResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockResponseDto;
 import dev.jino.tripbasketnew.block.dto.BlockTodoResponseDto;
+import dev.jino.tripbasketnew.block.dto.CreateBlockReactionRequestDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockRequestDto;
 import dev.jino.tripbasketnew.block.dto.CreateBlockTodoRequestDto;
 import dev.jino.tripbasketnew.block.dto.UpdateBlockRequestDto;
 import dev.jino.tripbasketnew.block.dto.UpdateBlockTodoRequestDto;
+import dev.jino.tripbasketnew.block.service.BlockReactionService;
 import dev.jino.tripbasketnew.block.service.BlockService;
 import dev.jino.tripbasketnew.block.service.BlockTodoService;
 import dev.jino.tripbasketnew.security.principal.UserPrincipal;
@@ -25,6 +28,7 @@ public class BlockController implements BlockApi {
 
     private final BlockService blockService;
     private final BlockTodoService blockTodoService;
+    private final BlockReactionService blockReactionService;
 
     @Override
     public ResponseEntity<BlockListResponseDto> getBlocks(UUID roomId, String status, UserPrincipal userPrincipal) {
@@ -70,6 +74,21 @@ public class BlockController implements BlockApi {
     @Override
     public ResponseEntity<Void> deleteTodo(UUID roomId, UUID blockId, UUID todoId, UserPrincipal userPrincipal) {
         blockTodoService.deleteTodo(roomId, blockId, todoId, userPrincipal.getMemberId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<BlockReactionResponseDto> createReaction(
+            UUID roomId, UUID blockId, CreateBlockReactionRequestDto request, UserPrincipal userPrincipal) {
+        BlockReactionResponseDto response =
+                blockReactionService.createReaction(roomId, blockId, request, userPrincipal.getMemberId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteReaction(
+            UUID roomId, UUID blockId, UUID reactionId, UserPrincipal userPrincipal) {
+        blockReactionService.deleteReaction(roomId, blockId, reactionId, userPrincipal.getMemberId());
         return ResponseEntity.noContent().build();
     }
 

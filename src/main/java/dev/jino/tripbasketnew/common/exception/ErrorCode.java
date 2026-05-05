@@ -37,6 +37,11 @@ public enum ErrorCode {
             "bucket 상태에서는 시작 시간과 종료 시간을 보낼 수 없습니다."),
     BLOCK_INVALID_TIME_RANGE(HttpStatus.BAD_REQUEST, "endTime must be after startTime", "종료 시간은 시작 시간보다 뒤여야 합니다."),
     BLOCK_TODO_NOT_FOUND(HttpStatus.NOT_FOUND, "Block todo not found", "해당 투두를 찾을 수 없습니다."),
+    BLOCK_REACTION_TYPE_INVALID(
+            HttpStatus.BAD_REQUEST, "type must be one of [like]", "지원하지 않는 리액션 타입입니다. 허용값은 like 입니다."),
+    BLOCK_REACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Block reaction not found", "해당 리액션을 찾을 수 없습니다."),
+    BLOCK_REACTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "Block reaction already exists", "이미 같은 리액션을 남겼습니다."),
+    BLOCK_REACTION_DELETE_DENIED(HttpStatus.FORBIDDEN, "Block reaction delete denied", "본인이 남긴 리액션만 삭제할 수 있습니다."),
 
     // Place 관련
     PLACE_ID_BLANK(HttpStatus.BAD_REQUEST, "placeId must not be blank", "장소 ID는 비어 있을 수 없습니다."),
