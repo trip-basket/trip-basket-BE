@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import dev.jino.tripbasketnew.block.dto.CreateBlockReactionRequestDto;
 import dev.jino.tripbasketnew.block.entity.Block;
@@ -105,6 +106,32 @@ class BlockReactionServiceTest {
         when(blockReactionRepository.existsByBlock_IdAndMember_IdAndType(
                         block.getId(), member.getId(), BlockReactionType.LIKE))
                 .thenReturn(true);
+
+        assertThatThrownBy(() -> blockReactionService.createReaction(
+                        room.getId(),
+                        block.getId(),
+                        new CreateBlockReactionRequestDto(BlockReactionType.LIKE),
+                        member.getId()))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.BLOCK_REACTION_ALREADY_EXISTS);
+    }
+
+    @Test
+    void createReaction_throwsWhenDuplicateIsDetectedOnSave() {
+        Room room = room();
+        Member member = member();
+        RoomMember roomMember = RoomMember.member(room, member);
+        Block block = block(room, member);
+
+        when(roomAccessPolicy.validateParticipantAccess(room.getId(), member.getId()))
+                .thenReturn(roomMember);
+        when(blockRepository.findByIdAndRoom_Id(block.getId(), room.getId())).thenReturn(Optional.of(block));
+        when(blockReactionRepository.existsByBlock_IdAndMember_IdAndType(
+                        block.getId(), member.getId(), BlockReactionType.LIKE))
+                .thenReturn(false);
+        when(blockReactionRepository.save(any(BlockReaction.class)))
+                .thenThrow(new DataIntegrityViolationException("uk_block_reactions_block_member_type"));
 
         assertThatThrownBy(() -> blockReactionService.createReaction(
                         room.getId(),

@@ -3,6 +3,7 @@ package dev.jino.tripbasketnew.block.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,9 +44,13 @@ public class BlockReactionService {
             throw new BusinessException(ErrorCode.BLOCK_REACTION_ALREADY_EXISTS);
         }
 
-        BlockReaction reaction =
-                blockReactionRepository.save(BlockReaction.create(block, roomMember.getMember(), request.type()));
-        return toResponse(reaction);
+        try {
+            BlockReaction reaction =
+                    blockReactionRepository.save(BlockReaction.create(block, roomMember.getMember(), request.type()));
+            return toResponse(reaction);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException(ErrorCode.BLOCK_REACTION_ALREADY_EXISTS, e);
+        }
     }
 
     @Transactional
